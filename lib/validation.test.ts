@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { postSchema } from "./validation";
+describe("postSchema", () => { it("accepts a complete post", () => { expect(postSchema.safeParse({ type: "lost", title: "Ví da màu nâu", category: "Ví & giấy tờ", color: "Nâu", description: "Ví có sticker nhỏ ở mặt trong và một vết xước.", location: "Tòa B", occurredAt: "2026-09-15" }).success).toBe(true); }); it("rejects short descriptions", () => { expect(postSchema.safeParse({ type: "lost", title: "Ví da", category: "Ví", color: "Nâu", description: "ngắn", location: "B", occurredAt: "" }).success).toBe(false); }); });

@@ -1,0 +1,3 @@
+-- Seed is intentionally safe to run after creating demo users in Supabase Auth.
+-- Insert demo posts by replacing the UUIDs below with profile IDs from auth.users.
+-- The local UI also ships with the same records for credential-free previews.

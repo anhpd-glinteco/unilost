@@ -1,0 +1,8 @@
+import type { Post } from "./types";
+export const featuredPosts: Post[] = [
+  { id: "p-001", type: "found", title: "Tai nghe Sony WH-1000XM4", category: "Thiết bị điện tử", color: "Đen", description: "Tai nghe chụp tai, có một vết xước nhỏ ở bên phải. Được tìm thấy cạnh dãy bàn cửa sổ.", location: "Thư viện trung tâm", occurredAt: "2026-09-15", createdAt: "2026-09-16T08:20:00Z", status: "searching", moderation: "published", ownerName: "Minh Anh", ownerId: "demo-holder", emoji: "🎧" },
+  { id: "p-002", type: "lost", title: "Ví da nâu · có thẻ sinh viên", category: "Ví & giấy tờ", color: "Nâu", description: "Ví da màu nâu, bên trong có thẻ sinh viên tên Nguyễn Minh. Có thể đã rơi ở khu B.", location: "Tòa B - tầng 2", occurredAt: "2026-09-15", createdAt: "2026-09-15T15:10:00Z", status: "matched", moderation: "published", ownerName: "Nguyễn Minh", ownerId: "demo-loser", emoji: "👛" },
+  { id: "p-003", type: "found", title: "Chìa khóa 3 chiếc", category: "Chìa khóa", color: "Bạc", description: "Một chùm 3 chìa khóa, có móc khóa hình quả bơ màu xanh.", location: "Sảnh nhà A", occurredAt: "2026-09-14", createdAt: "2026-09-15T09:45:00Z", status: "searching", moderation: "published", ownerName: "Hoàng Long", ownerId: "demo-holder-2", emoji: "🔑" },
+  { id: "p-004", type: "lost", title: "Bình nước xanh navy", category: "Đồ dùng cá nhân", color: "Xanh navy", description: "Bình giữ nhiệt 750ml, có sticker hình núi ở mặt trước.", location: "Sân thể thao", occurredAt: "2026-09-13", createdAt: "2026-09-14T18:30:00Z", status: "searching", moderation: "published", ownerName: "Lê An", ownerId: "demo-loser-2", emoji: "🧴" },
+];
+export const categories = ["Tất cả danh mục", "Thiết bị điện tử", "Ví & giấy tờ", "Chìa khóa", "Đồ dùng cá nhân", "Sách vở", "Khác"];

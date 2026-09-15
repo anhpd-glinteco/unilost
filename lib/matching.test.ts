@@ -1,0 +1,4 @@
+import { describe, expect, it } from "vitest";
+import { matchPosts } from "./matching";
+import { featuredPosts } from "./mock-data";
+describe("matchPosts", () => { it("only returns opposite post types with explainable scores", () => { const candidate = { ...featuredPosts[1], category: featuredPosts[0].category, color: featuredPosts[0].color, location: featuredPosts[0].location }; const result = matchPosts(featuredPosts[0], [...featuredPosts, candidate]); expect(result.every((item) => item.post.type !== featuredPosts[0].type)).toBe(true); expect(result[0]?.reasons.length).toBeGreaterThan(0); }); it("filters weak candidates", () => { const result = matchPosts({ ...featuredPosts[0], category: "Khác", color: "Tím", location: "Cổng trường", occurredAt: "2020-01-01" }, featuredPosts); expect(result).toHaveLength(0); }); });
