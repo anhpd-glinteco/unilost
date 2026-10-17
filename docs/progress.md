@@ -126,3 +126,9 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 - Thay đổi dữ liệu / migration / cấu hình:
 - Chưa làm / rủi ro / điều kiện còn thiếu:
 - Phiên tiếp theo và đầu vào cần đọc:
+
+### Công bố A2 — 17/10/2026
+
+- Đã commit code `030f9a9`, push `codex/unilost-a2-permissions` và mở [PR #44](https://github.com/anhpd-glinteco/unilost/pull/44), base `codex/unilost-a1b-profile` (PR #43). Các ghi chú “chưa commit/push/PR” ở checkpoint trước là lịch sử trước công bố.
+- Hoàn tất phạm vi code khóa quyền và form hồ sơ, 107 unit test/113 API checks thật; CI của PR được theo dõi trực tiếp trên GitHub. Minh chứng chi tiết trong `D:\Codex\outputs\unilost\a2\verification.md`.
+- Không đóng #11/#12/#36: còn hợp đồng/workflow ghi tin/claim, email thứ hai bị giới hạn provider và kiểm tra HTTPS/Worker. Không ghi 100% tiến độ hoặc đóng issue rộng chỉ vì phần A2 đã có code và test. Không merge/deploy; production gate vẫn tắt.
