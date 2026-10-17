@@ -54,7 +54,7 @@ begin
 
   foreach table_name in array array['posts','post_images','claim_requests','status_history','moderation_actions'] loop
     foreach statement in array array[
-      format('insert into public.%I default values', table_name),
+      format('insert into public.%I (id) values (gen_random_uuid())', table_name),
       format('update public.%I set id = gen_random_uuid()', table_name),
       format('delete from public.%I', table_name)
     ] loop
