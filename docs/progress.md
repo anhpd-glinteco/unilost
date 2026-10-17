@@ -15,7 +15,7 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 - **Commit/PR:** commit tài liệu `docs: establish UniLost A0 baseline and session handoff` trên branch trên (tra bằng `git log -1` sau phiên); chưa push/PR. Không ghi SHA của chính commit vào nội dung commit để tránh tham chiếu vòng.
 - **Chưa kiểm tra:** không chạy unit/typecheck/lint/build vì phiên chỉ sửa tài liệu, chưa cài `node_modules`; chưa xác minh DB Supabase thực tế hoặc runtime UI. Không xác nhận các lỗi SQL đã khai thác thành công trên production.
 
-### Phiên tiếp theo: A1a — Auth và phiên server
+### Đầu vào A1a (đã thực hiện bên dưới)
 
 1. Đọc plan, baseline R02/S06/S07, UC01 và issue #9/#11/#12; kiểm tra trạng thái branch và thay đổi người dùng trước khi làm.
 2. Đọc các callers `lib/supabase.ts`, login/register/header và `app/chatgpt-auth.ts`; kiểm tra execution profile/Cloudflare trước khi chọn cơ chế callback/cookie. Chỉ sử dụng Supabase làm danh tính nghiệp vụ.
@@ -23,6 +23,27 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 4. Chốt một đầu ra: OTP login/callback/logout + phiên server đã xác thực, không thành công giả khi thiếu env, không open redirect. Tách UI đăng ký/profile sang A1b.
 5. Viết test hồi quy cho thiếu cấu hình, return URL sai và phiên không hợp lệ; kiểm tra provider/callback thật trên Supabase test khi có cấu hình. Không yêu cầu người dùng gửi secret vào chat; không ghi secret ra log.
 6. Chạy kiểm tra, cập nhật progress và ma trận, commit nhỏ. Nếu chưa có môi trường Supabase test thì ghi rõ phần integration chưa kiểm chứng; không ghi Auth đạt đầy đủ.
+
+## Checkpoint A1a — 17/10/2026
+
+- **Phạm vi / issue:** #9/#11, đối chiếu #12; OTP email PKCE, callback, logout phiên hiện tại và user server được Supabase xác thực. Đã đọc nội dung issue bằng GitHub CLI; không đóng issue/sửa Sheet.
+- **Branch / base:** `codex/unilost-a1a-auth`, base A0 `4a4b25b`. Commit phiên dùng tiêu đề `feat: implement Supabase email auth and server sessions`; chưa push/PR.
+- **Đầu ra:** browser dùng cookie SSR; callback `/auth/callback` đổi code và gọi `getUser`; helper server không nhận danh tính từ cookie user/header ChatGPT; proxy lưu token refresh cho request và response; logout bằng server action, không dùng GET. Trang login hiển thị user đã xác thực và nút logout; header/profile/guard nghiệp vụ để A1b.
+- **Validation / lỗi:** thiếu env không báo gửi thành công; email sai/provider/mạng lỗi có thông báo; chặn submit lặp; form POST tránh email vào query khi chưa hydrate; return path chặn external/protocol-relative/backslash/control/encoded Auth loop. Callback lỗi không đưa chi tiết provider/token vào thông báo. Không cache phản hồi phiên/callback.
+- **Dependency / cấu hình:** thêm `@supabase/ssr` 0.12.7 chính thức và lockfile, không tự viết bộ lưu/refresh cookie; bổ sung `.env.example` chỉ chứa tên biến rỗng. Không tạo `.env.local`, không đổi Supabase/schema/migration/dữ liệu thật. Cookie production có Secure, cần HTTPS.
+- **Baseline trước sửa:** `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test` (4/4) và `npm run build` đều PASS. Môi trường Windows, Node 24.19.0, execution profile portable (Vinext/Cloudflare Vite).
+- **Kiểm tra sau sửa:** typecheck, lint, unit test và build PASS; 56/56 test, gồm SDK thật với HTTP Auth mô phỏng cho PKCE, refresh token, logout và từ chối token sai. Proxy test kiểm tra forwarding cookie và cache header. Build sinh `dist/server/wrangler.json`; chưa deploy.
+- **Smoke browser:** không env tại localhost:5173: lỗi cấu hình đúng, không sent, callback lỗi đúng, query trùng và error key lạ không làm trang lỗi. Auth HTTP mô phỏng loopback + app localhost:5174: gửi OTP có PKCE, callback 303 vào dashboard, login render đúng user, server-action logout 303 xóa session, code dùng lại lỗi và không đi sang domain ngoài. Không có lỗi console trình duyệt; dev server có cảnh báo dependency optimization và React nhiều renderer khi HMR. Đã dừng hai dev server và provider mô phỏng sau kiểm tra.
+- **Minh chứng:** log/snapshot Playwright và tóm tắt ở `D:\Codex\outputs\unilost\a1a\`; provider mô phỏng tạm ở `D:\Codex\work\unilost\a1a\`, không thêm vào dependencies hay runtime ứng dụng.
+- **Giới hạn:** chưa có env/tài khoản Supabase test; chưa gửi/nhận email thật, xác minh redirect allowlist/template/provider, thử cookie HTTPS/refresh trên Worker hoặc RLS thực tế. Không coi R02 hoặc #9/#11/#12 đã nghiệm thu toàn bộ.
+
+### Phiên tiếp theo: A1b — Đăng ký, hồ sơ và bảo vệ thao tác
+
+1. Đọc checkpoint này, R02/S07, UC01 và issue #9/#11/#12. Dùng `getSupabaseUser()` cho danh tính server; tái sử dụng client cookie hiện có.
+2. Nối UI đăng ký/profile và trạng thái tài khoản trong header; xác định quyền từ dữ liệu server, không lấy role từ client/header ChatGPT.
+3. Nối guard Supabase cho route/thao tác ghi của dashboard/posts/admin theo yêu cầu; không đồng nhất đăng nhập với quyền admin. Giữ các phần dữ liệu đang demo được ghi rõ.
+4. Chuẩn bị tài khoản/fixture Auth-RLS test và chạy luồng email thật khi có project riêng; không yêu cầu gửi secret vào chat. Nếu chưa có cấu hình thì tiếp tục test mô phỏng, ghi phần integration còn thiếu.
+5. Chạy kiểm tra, cập nhật ma trận/checkpoint và commit phiên. A2 chỉ bắt đầu khi đủ đầu vào DB test riêng.
 
 ## Mẫu checkpoint cho phiên sau
 
