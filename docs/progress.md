@@ -45,6 +45,15 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 4. Chuẩn bị tài khoản/fixture Auth-RLS test và chạy luồng email thật khi có project riêng; không yêu cầu gửi secret vào chat. Nếu chưa có cấu hình thì tiếp tục test mô phỏng, ghi phần integration còn thiếu.
 5. Chạy kiểm tra, cập nhật ma trận/checkpoint và commit phiên. A2 chỉ bắt đầu khi đủ đầu vào DB test riêng.
 
+### Đồng bộ GitHub sau A1a — 17/10/2026
+
+- Đã push `codex/unilost-a1a-auth`; [PR #42](https://github.com/anhpd-glinteco/unilost/pull/42) mở vào `main`, gồm A0 và A1a. Commit code `efaeabe`; chưa merge/deploy. [CI web](https://github.com/anhpd-glinteco/unilost/actions/runs/39022510996) PASS trên GitHub, gồm install/typecheck/lint/56 test/build.
+- **Đã đóng #7:** hoàn tất rà soát schema/RLS/Auth/Storage và ghi rủi ro A0. Sửa quyền và test DB thật tiếp tục ở #36/A2, #14/B1, #26–#28/A5–A9; đóng audit không đồng nghĩa đã khắc phục rủi ro.
+- **Đã đóng #10:** hoàn tất ma trận yêu cầu, kế hoạch kiểm thử và bàn giao A0. Test tích hợp, E2E và báo cáo cuối vẫn ở #12/#28/#37/#41.
+- **Giữ mở #6/#8:** đã có rà soát UI/UC01–UC08; còn khóa hợp đồng quyền/trạng thái sau đối chiếu A2/A3 ở A4. **Giữ mở #9/#11/#12:** A1a có code/test, còn A1b, tài khoản Supabase test và kiểm tra Auth/RLS thật. Đã thêm checklist, minh chứng và phiên kế tiếp vào cả 7 issue #6–#12.
+- Đã đọc lại Sheet bằng connector, không sửa: tab `Kế hoạch` (`gid=274651441`) hiện có header hàng 8, Tuần 1 hàng 9, Tuần 2 hàng 10. Số dòng trong issue/kế hoạch cũ đã lệch; tra theo tuần/tên đầu việc và URL, không xem số dòng cũ hoặc phần trăm Sheet là bằng chứng nghiệm thu. Các số issue mở trong A0 là snapshot lịch sử.
+- Phiên sau bắt đầu **A1b**, tái sử dụng A1a và kiểm tra trạng thái PR/issue mới nhất; không làm lại #7/#10. Khi checkout `main`, lưu ý PR #42 chưa merge nên tài liệu/code mới vẫn cần đọc từ nhánh/PR.
+
 ## Mẫu checkpoint cho phiên sau
 
 - Phiên / ngày / phạm vi / issue:
