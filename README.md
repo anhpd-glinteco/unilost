@@ -30,6 +30,10 @@ Repo nền tảng cho hệ thống hỗ trợ tìm kiếm đồ thất lạc tro
 
 Chi tiết trách nhiệm giữa các thư mục nằm trong [docs/architecture.md](docs/architecture.md).
 
+## Tiếp tục công việc theo phiên
+
+Đọc [kế hoạch](docs/plan.md) và [checkpoint bàn giao](docs/progress.md) trước mỗi phiên. [Baseline A0](docs/baseline.md) phân biệt UI demo với phần đã tích hợp; [hồ sơ báo cáo](docs/report/README.md) lưu đặc tả, sơ đồ và minh chứng cho báo cáo học phần.
+
 ## Phạm vi MVP
 
 - Xem, tìm kiếm và lọc tin mất đồ/nhặt được.
