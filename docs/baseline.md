@@ -11,7 +11,7 @@ Ngày rà soát: 17/10/2026. Mã nguồn gốc: `ca1a170ea0cde0b005d5b0de24c2158
 | Mã / yêu cầu | Issue | Bằng chứng trong repo | Hiện trạng | Nghiệm thu / phiên |
 | --- | --- | --- | --- | --- |
 | R01 — yêu cầu/use case | #6, #8, #10 | requirements.md; report/use-cases.md; diagrams/use-cases.puml | A0 có đặc tả mục tiêu; chưa phải luồng đã chạy | Soát actor/luồng/ngoại lệ; A0, A4 |
-| R02 — Auth và phiên | #9, #11, #12 | app/auth; app/dashboard/actions.ts; components/auth/profile-form.tsx | A2: email/PKCE thật hộp thư 1, trigger/profile/role và lưu tên/khoa thật PASS; header desktop/mobile, logout/guard PASS. Cờ chỉ bật local project test, template/production mặc định tắt | Hộp thư 2 đang 429 over_email_send_rate_limit; HTTPS/Worker chưa kiểm chứng, chưa nghiệm thu toàn bộ A2 |
+| R02 — Auth và phiên | #9, #11, #12 | app/auth; app/dashboard/actions.ts; components/auth/profile-form.tsx | A2: email/PKCE thật hộp thư 1, trigger/profile/role và lưu tên/khoa thật PASS; header desktop/mobile, logout/guard PASS. Cờ chỉ bật local project test, template/production mặc định tắt | Hộp thư 2: nhận thư/PKCE/profile role user/logout và đăng nhập lại giữ hồ sơ đạt sau sửa Gmail SMTP; HTTPS/Worker chưa kiểm chứng, chưa nghiệm thu toàn bộ A2 |
 | R03 — quyền dữ liệu | #7, #36 | supabase/migrations/0002_a2_permissions.sql; supabase/tests; scripts/test-permissions.mjs | A2 đã áp dụng trên project test: SQL assertions + 77 kiểm tra actor + 113 Auth/REST/Storage PASS, fixture tự động đã dọn; role không tự nâng, tên/khoa chỉ tự sửa, ghi demo bị khóa | Quyền nền đã kiểm chứng trên project test; workflow tin/claim và điều kiện rộng hơn của #36 còn tiếp tục |
 | R04 — tin/ảnh | #13–#16 | app/posts/new/page.tsx; post_images/storage trong SQL | UI demo có guard; form lưu/upload bị khóa, bỏ success giả ở A1b; seed.sql chỉ có chú thích | CRUD, file sai/lỗi, ownership; A3, B1 |
 | R05 — feed/tìm/chi tiết | #17–#20 | app/posts/page.tsx; app/posts/[id]/page.tsx; components/search-shell.tsx | Mock; lọc client; ID sai trả featuredPosts[0]; chưa phân trang/query thật | 404, quyền xem, lọc/thứ tự/page; A3b, B2 |
@@ -42,7 +42,7 @@ Các nhận định dưới đây dựa trên SQL/code hiện tại. Cần tái 
 
 | Màn hình | Đã thấy trong code | Chưa có/chưa kiểm chứng |
 | --- | --- | --- |
-| Login/Register/Header | A2: email/PKCE thật hộp thư 1; form/action tên/khoa và header mobile/desktop, guard/logout thật đạt trên project test | Hộp thư 2 đang bị hạn mức email; HTTPS/Worker và nghiệm thu rộng hơn còn thiếu. |
+| Login/Register/Header | A2: email/PKCE thật hộp thư 1; form/action tên/khoa và header mobile/desktop, guard/logout thật đạt trên project test | Hộp thư 2: PKCE/hồ sơ/logout/đăng nhập lại giữ hồ sơ đạt qua Gmail SMTP; HTTPS/Worker và nghiệm thu rộng hơn còn thiếu. |
 | New post | Form demo có guard, bị vô hiệu hóa và không báo lưu thành công | Persist, validation server, upload/progress/lỗi, sửa/đóng tin. |
 | Posts/Search | Cards, query/type/category client, empty | Loading/error dữ liệu thật, filter khác, sort/page, quyền xem. |
 | Post detail | Mock, lý do matching | 404 thật, ảnh thật, form claim và điều kiện theo type/status. |

@@ -132,3 +132,55 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 - Đã commit code `030f9a9`, push `codex/unilost-a2-permissions` và mở [PR #44](https://github.com/anhpd-glinteco/unilost/pull/44), base `codex/unilost-a1b-profile` (PR #43). Các ghi chú “chưa commit/push/PR” ở checkpoint trước là lịch sử trước công bố.
 - Hoàn tất phạm vi code khóa quyền và form hồ sơ, 107 unit test/113 API checks thật; CI của PR được theo dõi trực tiếp trên GitHub. Minh chứng chi tiết trong `D:\Codex\outputs\unilost\a2\verification.md`.
 - Không đóng #11/#12/#36: còn hợp đồng/workflow ghi tin/claim, email thứ hai bị giới hạn provider và kiểm tra HTTPS/Worker. Không ghi 100% tiến độ hoặc đóng issue rộng chỉ vì phần A2 đã có code và test. Không merge/deploy; production gate vẫn tắt.
+
+
+### Tiếp tục nghiệm thu email thứ hai — 17/10/2026
+
+- Theo yêu cầu người dùng, dùng hộp thư thứ hai thay thế; địa chỉ không ghi vào Git. Gửi đúng một yêu cầu qua UI `/auth/login` trên localhost:5173 của project test `lsaukzzmwbsztnlcrdpk`; UI báo đã gửi, console không có error/warn. Không gặp 429 trong lần này; không gửi lặp.
+- DB readback bằng API quản trị chỉ đọc: có Auth user và profile khớp ID, default role `user`, email chưa xác nhận. Đây chưa phải bằng chứng nhận thư hoặc hoàn tất PKCE. Snapshot hồ sơ trước đăng nhập được giữ ngoài Git để đối chiếu sau đăng nhập lại.
+- Gmail connector hiện kết nối hộp thư khác; tìm đúng người nhận không có kết quả. Chờ người dùng mở hộp thư trong trình duyệt Codex, không yêu cầu đưa link/token vào chat. Tab gửi yêu cầu giữ nguyên để bảo toàn phiên PKCE.
+- Minh chứng đã loại email/token: `D:\Codex\outputs\unilost\a2\email-second\sent.png`, `db-before.json`. Chưa kiểm tra callback, logout/đăng nhập lại của hộp thư thứ hai; HTTPS/Worker vẫn chờ staging. Không đổi code/API, không xác nhận email bằng admin, không đóng #12/#36, không merge/deploy.
+
+
+### Kết quả sau khi mở hộp thư thứ hai — 17/10/2026
+
+- Người dùng mở đúng hộp thư trong cùng trình duyệt Codex; đã bấm link của project test. Callback PKCE thành công về trang chủ có trạng thái đăng nhập; vào `/dashboard#profile` đọc đúng hồ sơ thật, role DB `user`.
+- Provider log: POST `/auth/v1/token?grant_type=pkce` 200 lúc 20:29:07, GET user/profile 200, logout 204 lúc 20:29:27 (Asia/Saigon). DB readback xác nhận email đã confirmed, có last sign-in, profile khớp Auth ID và toàn bộ trường được đọc giữ nguyên so với snapshot trước xác nhận. Không dùng admin-confirm hoặc thay đổi hồ sơ.
+- Đã logout qua UI về form khách. Gửi đúng một yêu cầu link cho bước đăng nhập lại: UI trả lỗi an toàn, log provider POST `/auth/v1/otp` HTTP 429 lúc 20:29:34. Dừng gửi thêm; chưa nghiệm thu đăng nhập lại/giữ hồ sơ sau đăng nhập lại. Không suy đoán mã lỗi cụ thể ngoài HTTP status đã thấy.
+- Minh chứng ngoài Git ở `D:\Codex\outputs\unilost\a2\email-second\`: `db-after-confirmation.json`, `provider-summary.txt`, `provider-logs.png`, `relogin-error.png`. Địa chỉ/token không ghi vào repo hoặc issue. Checkpoint chờ mở thư ở trên là lịch sử.
+- HTTPS/Worker tiếp tục chờ staging, #12/#36 giữ OPEN. Chỉ cập nhật tài liệu/checklist, không đổi code/API, không merge/deploy. Dừng dev server sau kiểm tra; tài khoản thật được giữ để tiếp tục sau khi hạn mức phục hồi.
+
+
+### Gmail SMTP test — 17/10/2026
+
+- Theo yêu cầu người dùng, bật custom SMTP chỉ trên project test, host `smtp.gmail.com`, TLS cổng 465, sender name `UniLost Test`. Người dùng nhập credential trực tiếp trên Dashboard; không đọc hoặc lưu credential vào repo/log. Đã lưu và tải lại xác nhận SMTP bật.
+- Một yêu cầu đăng nhập qua UI sau cấu hình trả HTTP 500. Auth log lúc 20:36:34 (Asia/Saigon) xác định Google SMTP trả `534 5.7.9 Application-specific password required` (`InvalidSecondFactor`). Credential hiện tại chưa được Google chấp nhận cho SMTP; không coi việc bật custom SMTP là đã sửa xong luồng email. Dừng gửi thêm.
+- Chờ người dùng thay bằng App Password hợp lệ của tài khoản gửi ngay trên Dashboard. Nếu cần tạo mới credential, người dùng tự hoàn tất trong Google Account. Không đưa mật khẩu vào chat/Git hoặc tắt bảo vệ tài khoản.
+- Minh chứng: `D:\Codex\outputs\unilost\a2\email-second\smtp-error-summary.txt`, `smtp-auth-error.png`. Đăng nhập lại vẫn chưa đạt; HTTPS/Worker vẫn chờ staging. Không đổi code/API hoặc đóng issue.
+
+
+### Hoàn tất email thứ hai sau sửa Gmail SMTP — 17/10/2026
+
+- Người dùng thay App Password trực tiếp trên Dashboard; đã lưu SMTP `smtp.gmail.com:465` chỉ cho project test. Không đọc, xuất, ghi credential hoặc địa chỉ email vào Git/issue. Không đổi code/API hoặc cờ production.
+- Gửi đúng một yêu cầu qua UI sau sửa, UI báo đã gửi; hộp thư thứ hai thực nhận thư `Your sign-in link` từ `UniLost Test` lúc 20:41 (Asia/Saigon). Bấm link đúng project trong cùng trình duyệt, PKCE hoàn tất về trang chủ có phiên; dashboard đọc đúng hồ sơ thật.
+- DB readback `db-after-relogin.json`: email confirmed, last sign-in mới hơn checkpoint cũ, ID khớp Auth user, role `user`; toàn bộ ID/tên/khoa/role/ngày tạo khớp snapshot trước xác nhận. Không sửa hồ sơ hoặc admin-confirm để giả bằng chứng. Logout lại qua UI về form khách đạt.
+- Đã khắc phục lỗi gửi email của project test bằng SMTP/App Password hợp lệ. Các ghi nhận 429 và SMTP 534 ở checkpoint trước là lịch sử; không tiếp tục ghi chúng là blocker hiện tại.
+- Minh chứng ngoài Git: `D:\Codex\outputs\unilost\a2\email-second\relogin-success.png`, `db-after-relogin.json`. Tài khoản email thật được giữ, dev server dừng sau test. `git diff --check` PASS; không chạy lại unit/build vì không thay code.
+- Phần email thứ hai đã đạt; HTTPS/Worker vẫn chờ URL staging. #12/#36 giữ OPEN cho tiêu chí rộng hơn; chưa merge/deploy hoặc bật production. Tài liệu cập nhật local, chưa commit/push.
+
+### Công bố nghiệm thu email thứ hai — 17/10/2026
+
+- Nhánh `codex/unilost-a2-email-acceptance`, base `codex/unilost-a2-permissions` (PR #44); PR riêng chỉ cập nhật tài liệu nghiệm thu, không đổi code/API hoặc đưa cấu hình bí mật vào Git.
+- Task [#45](https://github.com/anhpd-glinteco/unilost/issues/45) theo dõi đúng phần Gmail SMTP/email thứ hai đã hoàn tất và đóng sau CI xanh. #12/#36 tiếp tục OPEN cho phần chưa nghiệm thu; không đóng issue rộng bằng kết quả SMTP.
+- HTTPS/Worker vẫn chờ staging; không merge/deploy hoặc bật production. Các dòng “chưa commit/push” trước checkpoint này là trạng thái lịch sử.
+
+
+### A3a — tạo tin found thật — 17/10/2026
+
+- Nhánh `codex/unilost-a3a-create-found`, nối PR #46 từ `a21776a`; task A3a [#47](https://github.com/anhpd-glinteco/unilost/issues/47) theo dõi riêng phần tạo found. Issue gộp cũ #15 đã đóng sau khi chuyển phần còn lại (tạo lost, sửa/đóng) sang [#49](https://github.com/anhpd-glinteco/unilost/issues/49). Không merge/deploy.
+- Migration 0003 mở column INSERT có RLS found/self/searching/pending, restrictive guard và constraint nội dung/ngày; khóa UPDATE/DELETE/ảnh/claim giữ nguyên. Không đổi migration đã áp dụng hoặc xóa dữ liệu hiện hữu. Preflight và áp dụng thành công trên đúng Supabase test; SQL assertions A2/A3a hosted PASS.
+- Server action dùng danh tính Supabase xác thực + hồ sơ, whitelist FormData và schema trim/ngày hợp lệ. Chỉ báo thành công khi INSERT trả UUID. Không dùng service key trong app; client nhận lỗi an toàn.
+- `/posts/new` là form found không ảnh; pending khóa gửi, lỗi giữ input, thành công hiện mã/chờ duyệt và nút tạo tin khác. Chưa chuyển sang detail demo. Chưa triển khai lost/sửa/đóng tin, ảnh, feed/detail thật.
+- Kiểm chứng: 132 unit test, typecheck/lint/build PASS; PostgreSQL local giữ 77 actor checks A2 và assertions A3a, phát hiện dữ liệu cũ không hợp lệ làm migration rollback. REST/Auth/Storage hosted 180 checks PASS và dọn fixture. Runner ghi nhận cả UUID sinh từ request tấn công bất ngờ thành công để dọn an toàn.
+- Browser email thật/PKCE, tạo tin và DB readback đúng owner/found/searching/pending; double-click chỉ một hàng. Desktop 1086px, mobile 390×844 không tràn ngang, validation lỗi giữ input, tạo tin khác reset; console error không có. Đã xóa đúng tin giả browser, giữ tài khoản email thật.
+- Minh chứng `D:\Codex\outputs\unilost\a3a\`; hướng dẫn tái chạy tại `docs/supabase-test.md`. HTTPS/Worker chưa đạt; DB/network failure mới kiểm tra unit, chưa giả lập trên browser. Chống lặp trong form, chưa bảo đảm idempotency khi mất mạng rồi gửi lại. #15 đóng như issue được thay thế; #49 theo dõi phần tin còn lại; #12/#36 vẫn mở.

@@ -4,9 +4,11 @@
 
 Project test `unilost-a2-test` đã được tạo, ref `lsaukzzmwbsztnlcrdpk`, gói Free, vùng Tokyo theo cấu hình người dùng. Đã bootstrap 0001 và khóa quyền 0002 qua SQL Editor trên DB trống, kiểm tra và căn lại đầy đủ FK cascade theo nguồn gốc. Đây là áp dụng SQL thủ công, có snippet/checkpoint; chưa dùng CLI để tạo `supabase_migrations.schema_migrations` và không giả lập lịch sử CLI.
 
-SQL assertions và 77 kiểm tra actor trên PostgreSQL hosted đạt. Runner đã đạt **113 kiểm tra Auth/REST/Storage** sau đối chiếu schema và dọn toàn bộ fixture tự động. Email/PKCE thật, trigger và form sửa hồ sơ trên DB thật đã đạt với hộp thư test thứ nhất; hộp thư thứ hai đang bị **429 `over_email_send_rate_limit`**, chưa nghiệm thu. Tài khoản email test thứ nhất được giữ để tiếp tục sử dụng, các tài khoản `@example.test` tự động đã xóa.
+SQL assertions và 77 kiểm tra actor trên PostgreSQL hosted đạt. Runner đã đạt **113 kiểm tra Auth/REST/Storage** sau đối chiếu schema và dọn toàn bộ fixture tự động. Email/PKCE thật, trigger và form sửa hồ sơ trên DB thật đã đạt với hộp thư test thứ nhất; hộp thư thứ hai đã nhận thư và hoàn tất PKCE thật ngày 17/10/2026: token exchange 200, đọc hồ sơ thật, DB xác nhận email/role `user`/hồ sơ giữ nguyên, logout 204. Sau khi cấu hình Gmail SMTP với App Password hợp lệ, đã gửi/nhận link mới, đăng nhập lại bằng PKCE và đọc hồ sơ thật thành công. DB readback xác nhận last sign-in mới, cùng ID/tên/khoa/role/ngày tạo so với snapshot trước xác nhận; logout lại thành công. Các lỗi 429 và SMTP 534 trước đó là lịch sử đã khắc phục trên project test. Tài khoản email test thứ nhất được giữ để tiếp tục sử dụng, các tài khoản `@example.test` tự động đã xóa.
 
-`.env.example` vẫn mặc định `SUPABASE_PROFILE_EDIT_ENABLED=false`. Cấu hình `.env.local` bị Git ignore đã bật cờ **chỉ cho project test trên** sau kiểm tra quyền và email/PKCE thật. Không bật production; còn chờ email thứ hai và kiểm tra HTTPS/Worker trước nghiệm thu rộng hơn. Service key chỉ ở file test ngoài repo, không có trong app hoặc build.
+`.env.example` vẫn mặc định `SUPABASE_PROFILE_EDIT_ENABLED=false`. Cấu hình `.env.local` bị Git ignore đã bật cờ **chỉ cho project test trên** sau kiểm tra quyền và email/PKCE thật. Không bật production; còn chờ kiểm tra HTTPS/Worker trước nghiệm thu rộng hơn. Service key chỉ ở file test ngoài repo, không có trong app hoặc build.
+
+Custom SMTP Gmail đã hoạt động trên project test ngày 17/10/2026: `smtp.gmail.com`, TLS cổng 465. Người dùng thay bằng App Password hợp lệ trực tiếp trên Dashboard; gửi/nhận thư và đăng nhập lại thật đạt. Không lưu credential hoặc địa chỉ email vào repo. Gmail có hạn mức/phân loại thư riêng; chưa coi cấu hình test là nghiệm thu production.
 
 ## 1. Tạo project test riêng
 
@@ -58,3 +60,15 @@ Runner từ chối URL không khớp ref và không tự lấy cấu hình ứng
 ## Giới hạn còn lại
 
 Chưa có workflow mutation tin/claim; quyền ghi của chúng đang khóa kể cả admin ứng dụng. Ảnh bucket public vẫn truy cập được bằng URL đã biết (S05), chưa chuyển private/signed URL. API test tự động không thay thế email PKCE, HTTPS/Worker và kiểm tra đồng thời ở các phiên sau. Không đóng #12/#36 chỉ vì unit test hoặc fixture mô phỏng đạt.
+
+
+## A3a — tạo found (17/10/2026)
+
+- Sau 0002, áp dụng `supabase/migrations/0003_a3a_create_found_posts.sql` trên project test riêng. Không chạy lại 0001/0002 trên schema hosted đã bootstrap. SQL Editor không tự ghi migration history của CLI; đối chiếu schema trước khi repair history.
+- Preflight: chạy phần `begin`/`alter table ... add constraint posts_content_valid` của 0003 rồi `rollback`; kiểm tra lỗi dữ liệu hiện hữu trước khi chạy nguyên migration. Constraint tự validate toàn bộ dữ liệu và transaction rollback nếu không tương thích; không tự sửa/xóa tin cũ để vượt preflight.
+- Chạy lần lượt `supabase/tests/a2_permissions.sql`, `supabase/tests/a2_rls.sql`, `supabase/tests/a3a_create_found.sql`, rồi runner `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env scripts/test-permissions.mjs`. Hai file A2 hiện kiểm tra trạng thái quyền sau 0003; không dùng phiên bản mới để nghiệm thu schema chỉ có 0002.
+- Quyền mới: authenticated INSERT đúng các cột nội dung và owner_id; chỉ found của mình, searching/pending/chưa xóa. ID/thời gian/trạng thái/kiểm duyệt không có quyền INSERT; UPDATE/DELETE, claim, ảnh và Storage vẫn khóa. API trực tiếp phải tuân thủ constraint nội dung và ngày hợp lệ.
+- Trên `unilost-a2-test` (`lsaukzzmwbsztnlcrdpk`): preflight PASS, migration 0003 áp dụng qua SQL Editor, assertions hosted PASS; REST/Auth/Storage **180 kiểm tra PASS**, fixture đã dọn. Snippet kiểm tra: `f53110a1-82b9-4049-9c8d-a9f25f7235d9`.
+- Browser localhost: email thật/PKCE → `/posts/new` → double-click tạo đúng một tin found/searching/pending, owner khớp Auth; hiện mã tin/chờ duyệt. Nút tạo tin khác reset form; lỗi validation phía server giữ input. Desktop 1086px và mobile 390×844 không tràn ngang; không có browser console error. Tin giả browser đã xóa đúng UUID bằng fixture client ngoài app.
+- DB/network error được kiểm tra bằng unit mocks; chưa gây lỗi transport DB chủ động trên browser. HTTPS/Worker chưa nghiệm thu. Không dùng kết quả localhost để tuyên bố staging/production đạt.
+- Minh chứng ngoài Git: `D:\Codex\outputs\unilost\a3a\` (hosted-rest.log, hosted-sql.png, desktop-success.png, mobile-success.png, mobile-validation-error.png, browser-db.json và log local). Không lưu email/token/key trong tài liệu hoặc ứng dụng.
