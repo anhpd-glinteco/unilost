@@ -54,6 +54,31 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 - Đã đọc lại Sheet bằng connector, không sửa: tab `Kế hoạch` (`gid=274651441`) hiện có header hàng 8, Tuần 1 hàng 9, Tuần 2 hàng 10. Số dòng trong issue/kế hoạch cũ đã lệch; tra theo tuần/tên đầu việc và URL, không xem số dòng cũ hoặc phần trăm Sheet là bằng chứng nghiệm thu. Các số issue mở trong A0 là snapshot lịch sử.
 - Phiên sau bắt đầu **A1b**, tái sử dụng A1a và kiểm tra trạng thái PR/issue mới nhất; không làm lại #7/#10. Khi checkout `main`, lưu ý PR #42 chưa merge nên tài liệu/code mới vẫn cần đọc từ nhánh/PR.
 
+## Checkpoint A1b — 17/10/2026
+
+- **Phạm vi / issue:** #9/#11/#12; đăng ký OTP tên/email, hồ sơ chỉ đọc, header phiên desktop/mobile và guard server. Theo lựa chọn người dùng, sửa hồ sơ và khóa role DB để A2; không thêm dependency/schema/migration.
+- **Branch / base:** `codex/unilost-a1b-profile`, base `0787480`; commit `86030b7`. PR [#43](https://github.com/anhpd-glinteco/unilost/pull/43) mở vào `codex/unilost-a1a-auth` để xếp lớp trên [PR #42](https://github.com/anhpd-glinteco/unilost/pull/42); CI web PASS. Không merge/deploy hay sửa Sheet.
+- **Đầu ra:** tái sử dụng form/link OTP A1a, tên trim 1–100 ký tự gửi trong metadata `full_name` cho trigger hiện hữu; email cũ dùng luồng login, không sửa profile. Chỉ báo gửi email, callback PKCE + getUser mới tạo phiên xác thực. Giữ safe next qua login/register.
+- **Profile / quyền:** lấy ID từ `getSupabaseUser()`, query profile theo ID và kiểm tra dữ liệu trước hiển thị tên/khoa/ngày tham gia. Thiếu/lỗi profile có thông báo, không dùng người demo. Header server không lấy role từ metadata/header ChatGPT; mobile chỉ giữ trạng thái menu. Bốn route `/dashboard`, `/dashboard/claims`, `/posts/new`, `/admin` có guard; khách redirect login với next an toàn, member/thiếu/lỗi profile bị 404 admin.
+- **Demo:** dashboard/claim/admin ghi rõ dữ liệu minh họa; form tin/upload, nút claim/moderation/cập nhật hồ sơ bị khóa; bỏ màn hình lưu tin thành công và tuyên bố audit giả. Chưa có mutation tin/claim/profile.
+- **Kiểm chứng:** unit test 76/76, typecheck, lint và build portable Vinext/Cloudflare PASS. Fixture Auth/profile nằm trong tests; provider HTTP mô phỏng local dùng SDK thật, kiểm tra PKCE, metadata tên, hai submit chỉ một OTP, profile DB, role giả metadata, thiếu/lỗi profile, guest/member/admin, logout mobile, callback dùng lại và thiếu env. Viewport 390px không tràn ngang; guest desktop/mobile có login/register. Các request 404 admin là kết quả kiểm tra mong đợi, không có JS exception trong smoke đã đạt. Dev server có cảnh báo dependency optimization/HMR renderer; không đổi toolchain.
+- **Minh chứng:** `D:\Codex\outputs\unilost\a1b\`; mock HTTP tại `D:\Codex\work\unilost\a1b\mock-auth.mjs`, chỉ bind loopback và dùng dữ liệu giả. Đã dừng server/provider test. Hướng dẫn tài khoản test thật ở `tests/README.md`.
+- **Issue:** đã đóng #9 sau khi PR #43 có CI PASS; phạm vi giao diện đăng ký/session/profile hoàn tất. #11 và #12 vẫn mở do actor/mutation, email thật, trigger và RLS/API chưa xác minh. Policy tự sửa role còn S01/A2; guard ứng dụng chưa phải sửa quyền DB. Form cần JS; smoke cold-start trước hydration gặp POST tải lại trang, kiểm tra sau hydration đạt và email không vào query. Không coi R02/#9/#11/#12 đã nghiệm thu toàn bộ.
+
+### Đồng bộ GitHub sau A1b — 17/10/2026
+
+- Đã push nhánh `codex/unilost-a1b-profile`, mở [PR #43](https://github.com/anhpd-glinteco/unilost/pull/43) vào nhánh A1a. CI web PASS: install, typecheck, lint, unit test và build. PR #43 chưa merge; PR #42 vẫn OPEN.
+- Đã đóng #9 khi phần UI đăng nhập/đăng ký, trạng thái phiên, header tài khoản và kiểm tra truy cập hoàn tất, có PR và CI. Phần email thật/provider và RLS không đánh dấu đã xác minh.
+- Giữ mở #11/#12: còn hoàn thiện actor/mutation/quyền DB, project test riêng, callback/email thật và kiểm tra API/RLS trực tiếp.
+
+### Phiên tiếp theo: A2 — Khóa quyền DB và chuẩn bị sửa hồ sơ
+
+1. Đọc checkpoint A1b, S01–S05 và issue #36/#12; xác nhận project DB test riêng trước khi thay đổi dữ liệu/quyền.
+2. Tạo tài khoản/fixture theo `tests/README.md`; xác minh email, trigger tạo profile và default role user trên provider thật, giữ secret ngoài Git/chat.
+3. Thêm migration bổ sung khóa cập nhật role và trường hệ thống; không sửa migration đã áp dụng. Test REST trực tiếp với khách/thành viên/người lạ/admin, gồm tự nâng role.
+4. Sau khi quyền cột/DB an toàn mới nối sửa tên/khoa; server lấy ID và whitelist trường, không nhận role từ client.
+5. Chạy test DB/quyền và kiểm tra ứng dụng, cập nhật ma trận/bàn giao. Không bắt đầu mutation tin/claim trước khi đủ cổng quyền A2.
+
 ## Mẫu checkpoint cho phiên sau
 
 - Phiên / ngày / phạm vi / issue:

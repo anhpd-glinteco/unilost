@@ -11,9 +11,9 @@ Ngày rà soát: 17/10/2026. Mã nguồn gốc: `ca1a170ea0cde0b005d5b0de24c2158
 | Mã / yêu cầu | Issue | Bằng chứng trong repo | Hiện trạng | Nghiệm thu / phiên |
 | --- | --- | --- | --- | --- |
 | R01 — yêu cầu/use case | #6, #8, #10 | requirements.md; report/use-cases.md; diagrams/use-cases.puml | A0 có đặc tả mục tiêu; chưa phải luồng đã chạy | Soát actor/luồng/ngoại lệ; A0, A4 |
-| R02 — Auth và phiên | #9, #11, #12 | app/auth/login/page.tsx; auth/callback/route.ts; lib/supabase/server.ts; proxy.ts | A1a: OTP PKCE/cookie, callback, logout, getUser server có test local/mô phỏng; Supabase thật chưa kiểm chứng. Register/UI tài khoản/guard còn A1b | Provider thật, profile và bảo vệ thao tác ghi; A1b |
+| R02 — Auth và phiên | #9, #11, #12 | app/auth/login/page.tsx; auth/callback/route.ts; lib/supabase/server.ts; proxy.ts | A1b: đăng ký tên/email dùng OTP PKCE; hồ sơ chỉ đọc từ DB; header phiên và guard dashboard/claims/new/admin đã kiểm tra local/mô phỏng. Email, trigger và RLS Supabase thật chưa kiểm chứng | Provider/trigger thật, khóa quyền DB và sửa hồ sơ; A2 |
 | R03 — quyền dữ liệu | #7, #36 | supabase/migrations/0001_initial.sql | Một phần; RLS có nhưng còn rộng; DB thực tế chưa kiểm chứng | Test API với 5 vai trò, chặn nâng quyền; A2 |
-| R04 — tin/ảnh | #13–#16 | app/posts/new/page.tsx; post_images/storage trong SQL | UI demo; submit chỉ setSubmitted, chưa lưu/upload; seed.sql chỉ có chú thích | CRUD, file sai/lỗi, ownership; A3, B1 |
+| R04 — tin/ảnh | #13–#16 | app/posts/new/page.tsx; post_images/storage trong SQL | UI demo có guard; form lưu/upload bị khóa, bỏ success giả ở A1b; seed.sql chỉ có chú thích | CRUD, file sai/lỗi, ownership; A3, B1 |
 | R05 — feed/tìm/chi tiết | #17–#20 | app/posts/page.tsx; app/posts/[id]/page.tsx; components/search-shell.tsx | Mock; lọc client; ID sai trả featuredPosts[0]; chưa phân trang/query thật | 404, quyền xem, lọc/thứ tự/page; A3b, B2 |
 | R06 — matching giải thích | #21–#24 | lib/matching.ts; lib/matching.test.ts | Có hàm và 2 test; chưa chạy test; chưa query ứng viên thật | Điểm, ngưỡng, tiếng Việt, loại tin returned; B3 |
 | R07 — gửi/xem claim | #25–#28 | app/dashboard/claims/page.tsx; claimSchema; ClaimRequest | UI tĩnh; chưa action/query; ClaimRequest chưa có requesterId | Tạo, hủy, riêng tư, tin đủ điều kiện; A4–A8 |
@@ -35,19 +35,19 @@ Các nhận định dưới đây dựa trên SQL/code hiện tại. Cần tái 
 | S04 | Chưa có unique accepted/completed hay khóa tin khi quyết định | A7: constraint + giao dịch; test hai kết nối thật. |
 | S05 | Bucket ảnh public và policy đọc toàn bucket; ẩn tin không bảo vệ URL ảnh đã biết | B1/A2: quyết định ảnh công khai hay private theo yêu cầu; nếu bảo vệ ảnh tin ẩn thì private bucket/signed URL, test URL trực tiếp. |
 | S06 | `postSchema` mới kiểm ngày không rỗng; form chưa gọi schema. A1a đã sửa thiếu cấu hình Auth báo gửi thành công, có test và smoke browser | Còn A3/B1: validation ngày/file tại trust boundary. |
-| S07 | Chi tiết ID sai fallback bài đầu; dashboard/admin/claim còn tĩnh và chưa guard Supabase | A1/A3/A8/C1: không hiển thị dữ liệu giả như dữ liệu thật; đúng 404/redirect/quyền. |
+| S07 | Chi tiết ID sai còn fallback bài đầu; A1b đã guard dashboard/admin/claim, gắn nhãn demo và khóa thao tác chưa lưu | A1/A3/A8/C1: không hiển thị dữ liệu giả như dữ liệu thật; đúng 404/redirect/quyền. |
 | S08 | Matching token bằng `\W+` chưa phù hợp tiếng Việt; chỉ loại closed, chưa loại returned | B3: thêm test trước khi sửa, giữ điểm/ngưỡng đã chọn nếu không có yêu cầu đổi. |
 
 ## Checklist UI cần nối và kiểm chứng
 
 | Màn hình | Đã thấy trong code | Chưa có/chưa kiểm chứng |
 | --- | --- | --- |
-| Login/Register/Header | A1a: form email có pending/error/sent, callback PKCE, phiên server và logout tại login; smoke với Auth mô phỏng | Provider thật, register submit/profile, UI phiên trong header và guard thao tác/route ở A1b. |
-| New post | Form và màn hình success demo | Persist, validation server, upload/progress/lỗi, sửa/đóng tin. |
+| Login/Register/Header | A1b: đăng ký tên/email, profile chỉ đọc, header desktop/mobile, logout và guard server; smoke Auth/profile mô phỏng | Email/trigger/profile/RLS thật; chỉnh sửa hồ sơ sau khi khóa quyền DB ở A2. |
+| New post | Form demo có guard, bị vô hiệu hóa và không báo lưu thành công | Persist, validation server, upload/progress/lỗi, sửa/đóng tin. |
 | Posts/Search | Cards, query/type/category client, empty | Loading/error dữ liệu thật, filter khác, sort/page, quyền xem. |
 | Post detail | Mock, lý do matching | 404 thật, ảnh thật, form claim và điều kiện theo type/status. |
-| Dashboard/Claims | Thẻ và proof giả, nút accept/reject | Dữ liệu riêng, pending/empty/error, hủy, mutation, conflict, cập nhật lại. |
-| Admin | Bảng mock và nút ẩn | Guard admin, pending/publish/hide/restore, audit và lỗi quyền. |
+| Dashboard/Claims | Hồ sơ tài khoản thật; tin/proof demo có nhãn, nút accept/reject bị khóa | Dữ liệu riêng, pending/empty/error, hủy, mutation, conflict, cập nhật lại. |
+| Admin | Guard theo role DB; bảng demo, nút ẩn bị khóa | Khóa role DB ở A2; pending/publish/hide/restore và audit thật. |
 
 Kiểm tra bàn phím, label, focus, contrast và responsive là kiểm tra trình duyệt ở các phiên UI; A0 chưa xác nhận các mục này đạt.
 
