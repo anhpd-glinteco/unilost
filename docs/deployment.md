@@ -6,6 +6,15 @@
 2. Bật email Auth; cấu hình Site URL và redirect URLs theo domain Worker production.
 3. Tạo user admin theo quy trình quản trị của nhóm và cập nhật `profiles.role = 'admin'` bằng quyền quản trị cơ sở dữ liệu.
 
+### Auth A1a — local và callback
+
+- Copy `.env.example` thành `.env.local`, điền URL project test và anon key; không đưa service-role key vào ứng dụng. Hai biến `NEXT_PUBLIC_*` phải có lúc build để client bundle nhận đúng cấu hình, đồng thời có ở môi trường server/Worker. Khởi động lại dev server sau khi đổi env.
+- Local mặc định: `http://localhost:5173`. Thêm callback `http://localhost:5173/auth/callback` vào Auth → URL Configuration; cho phép các query `next` ứng dụng sử dụng theo [hướng dẫn redirect của Supabase](https://supabase.com/docs/guides/auth/redirect-urls). Với origin local khác production, có thể dùng mẫu giới hạn `http://localhost:5173/auth/callback**`; production dùng domain HTTPS thực và đường dẫn callback cụ thể.
+- Giữ email template dùng `{{ .ConfirmationURL }}` để Supabase xác minh link rồi trả `code` về `/auth/callback`. Đây là PKCE code exchange, không phải callback nhận `token_hash` hoặc access token trong fragment.
+- Mở link bằng cùng trình duyệt/profile đã yêu cầu đăng nhập: PKCE verifier nằm trong cookie. Trình duyệt khác, link hết hạn hoặc đã dùng phải yêu cầu link mới. Việc tạo tài khoản email mới vẫn theo cấu hình Supabase `signInWithOtp` mặc định; UI đăng ký/profile thuộc A1b.
+- Kiểm tra phiên/đăng xuất tại `/auth/login`. Server chỉ nhận user từ `getUser()` của Supabase; các header ChatGPT không cấp quyền nghiệp vụ. Logout thu hồi phiên hiện tại (`scope: local`). Header tài khoản và guard các trang nghiệp vụ sẽ nối ở A1b.
+- `proxy.ts` refresh token trước khi render và trả cookie mới; callback và phản hồi có phiên không được cache công khai. Browser và server dùng cùng cookie; cookie có `Secure` trong production. Tham khảo [hướng dẫn SSR chính thức](https://supabase.com/docs/guides/auth/server-side/creating-a-client).
+
 ## 2. Cấu hình Cloudflare Workers
 
 1. Kết nối repository với Cloudflare Workers (Workers Builds) và chọn nhánh production.
