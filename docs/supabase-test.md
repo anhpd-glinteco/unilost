@@ -4,9 +4,11 @@
 
 Project test `unilost-a2-test` đã được tạo, ref `lsaukzzmwbsztnlcrdpk`, gói Free, vùng Tokyo theo cấu hình người dùng. Đã bootstrap 0001 và khóa quyền 0002 qua SQL Editor trên DB trống, kiểm tra và căn lại đầy đủ FK cascade theo nguồn gốc. Đây là áp dụng SQL thủ công, có snippet/checkpoint; chưa dùng CLI để tạo `supabase_migrations.schema_migrations` và không giả lập lịch sử CLI.
 
-SQL assertions và 77 kiểm tra actor trên PostgreSQL hosted đạt. Runner đã đạt **113 kiểm tra Auth/REST/Storage** sau đối chiếu schema và dọn toàn bộ fixture tự động. Email/PKCE thật, trigger và form sửa hồ sơ trên DB thật đã đạt với hộp thư test thứ nhất; hộp thư thứ hai đang bị **429 `over_email_send_rate_limit`**, chưa nghiệm thu. Tài khoản email test thứ nhất được giữ để tiếp tục sử dụng, các tài khoản `@example.test` tự động đã xóa.
+SQL assertions và 77 kiểm tra actor trên PostgreSQL hosted đạt. Runner đã đạt **113 kiểm tra Auth/REST/Storage** sau đối chiếu schema và dọn toàn bộ fixture tự động. Email/PKCE thật, trigger và form sửa hồ sơ trên DB thật đã đạt với hộp thư test thứ nhất; hộp thư thứ hai đã nhận thư và hoàn tất PKCE thật ngày 17/10/2026: token exchange 200, đọc hồ sơ thật, DB xác nhận email/role `user`/hồ sơ giữ nguyên, logout 204. Sau khi cấu hình Gmail SMTP với App Password hợp lệ, đã gửi/nhận link mới, đăng nhập lại bằng PKCE và đọc hồ sơ thật thành công. DB readback xác nhận last sign-in mới, cùng ID/tên/khoa/role/ngày tạo so với snapshot trước xác nhận; logout lại thành công. Các lỗi 429 và SMTP 534 trước đó là lịch sử đã khắc phục trên project test. Tài khoản email test thứ nhất được giữ để tiếp tục sử dụng, các tài khoản `@example.test` tự động đã xóa.
 
-`.env.example` vẫn mặc định `SUPABASE_PROFILE_EDIT_ENABLED=false`. Cấu hình `.env.local` bị Git ignore đã bật cờ **chỉ cho project test trên** sau kiểm tra quyền và email/PKCE thật. Không bật production; còn chờ email thứ hai và kiểm tra HTTPS/Worker trước nghiệm thu rộng hơn. Service key chỉ ở file test ngoài repo, không có trong app hoặc build.
+`.env.example` vẫn mặc định `SUPABASE_PROFILE_EDIT_ENABLED=false`. Cấu hình `.env.local` bị Git ignore đã bật cờ **chỉ cho project test trên** sau kiểm tra quyền và email/PKCE thật. Không bật production; còn chờ kiểm tra HTTPS/Worker trước nghiệm thu rộng hơn. Service key chỉ ở file test ngoài repo, không có trong app hoặc build.
+
+Custom SMTP Gmail đã hoạt động trên project test ngày 17/10/2026: `smtp.gmail.com`, TLS cổng 465. Người dùng thay bằng App Password hợp lệ trực tiếp trên Dashboard; gửi/nhận thư và đăng nhập lại thật đạt. Không lưu credential hoặc địa chỉ email vào repo. Gmail có hạn mức/phân loại thư riêng; chưa coi cấu hình test là nghiệm thu production.
 
 ## 1. Tạo project test riêng
 
