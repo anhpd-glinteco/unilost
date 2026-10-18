@@ -72,3 +72,10 @@ Chưa có workflow mutation tin/claim; quyền ghi của chúng đang khóa kể
 - Browser localhost: email thật/PKCE → `/posts/new` → double-click tạo đúng một tin found/searching/pending, owner khớp Auth; hiện mã tin/chờ duyệt. Nút tạo tin khác reset form; lỗi validation phía server giữ input. Desktop 1086px và mobile 390×844 không tràn ngang; không có browser console error. Tin giả browser đã xóa đúng UUID bằng fixture client ngoài app.
 - DB/network error được kiểm tra bằng unit mocks; chưa gây lỗi transport DB chủ động trên browser. HTTPS/Worker chưa nghiệm thu. Không dùng kết quả localhost để tuyên bố staging/production đạt.
 - Minh chứng ngoài Git: `D:\Codex\outputs\unilost\a3a\` (hosted-rest.log, hosted-sql.png, desktop-success.png, mobile-success.png, mobile-validation-error.png, browser-db.json và log local). Không lưu email/token/key trong tài liệu hoặc ứng dụng.
+
+## A3b — đọc chi tiết (18/10/2026)
+
+- Không có migration mới. Tái chạy runner theo lệnh A3a ở trên: ma trận đọc bổ sung kiểm tra published/pending/hidden/deleted cho bốn actor; tổng hiện tại **212 checks PASS** trên project test, fixture đã dọn.
+- Raw RLS cho chủ tin/admin đọc cả hàng deleted; truy vấn trang thêm `deleted_at=is.null` để mọi actor nhận 404 đối với tin xóa. Người lạ/khách không đọc pending/hidden. Không mở rộng quyền SELECT hay đưa service key vào app.
+- Browser dùng fixture Auth riêng: 25 trường hợp quyền xem, ID sai/không tồn tại và chuyển từ owner sang guest đạt; 1086px/390px không tràn ngang. Tài khoản/tin fixture đều dọn; đây không phải lượt kiểm tra email/PKCE mới.
+- Log/ảnh và giới hạn kiểm tra: `D:\Codex\outputs\unilost\a3b\verification.md`. Lỗi tải dữ liệu đã có unit/render tests; chưa mô phỏng DB outage trên browser. HTTPS/Worker còn chờ staging.
