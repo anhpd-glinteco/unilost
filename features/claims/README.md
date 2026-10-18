@@ -90,3 +90,11 @@ Các tiêu chí A5–A7 là đặc tả của A4; kết quả thực chạy đư
 - Khách có link đăng nhập quay lại đúng tin. Form chỉ mở cho hồ sơ hợp lệ, không phải chủ tin, found/published/chưa xóa/searching hoặc matched. Lỗi đọc khóa form và có link tải lại; mọi claim đã có đều khóa gửi lại, kể cả cancelled/rejected.
 - `CreateClaimForm` dùng `claimSchema`, `createClaim` và `ClaimState` hiện có. Validation giữ nội dung; pending khóa form và chặn hai action cùng lượt. Thành công chỉ khi action xác nhận; readback kèm lỗi không hiển thị thông báo gửi thành công. Mọi lần gửi tới server chưa rõ kết quả đều phải tải lại trước khi gửi tiếp.
 - Browser đã kiểm tra trên Supabase test bằng tài khoản password/fixture giả; không thay nghiệm thu email PKCE. Danh sách và nút hủy/chấp nhận/từ chối còn thuộc A8b/A9a; không đổi RPC/migration. Chi tiết kiểm chứng và giới hạn xem checkpoint A8a trong [progress](../../docs/progress.md).
+
+## Triển khai A8b — danh sách riêng tư
+
+- `/dashboard/claims` thay dữ liệu demo bằng hai mục Đã gửi/Đã nhận, mỗi mục có Suspense/loading, empty/error và phân trang 20 hàng riêng (`sentPage`, `receivedPage`). Thứ tự created_at/id giảm dần, đọc dư một hàng để xác định trang sau; tham số không hợp lệ về trang 1. Lỗi một mục không che mục còn lại; retry tải lại cùng URL.
+- `readClaimList` lấy danh tính từ Auth/profile, dùng client phiên và RLS; Đã gửi lọc requester_id, Đã nhận lọc posts.owner_id với inner join. Admin cũng chỉ thấy vai trò của chính mình trên trang này; không phải trang kiểm duyệt. Kiểm tra schema và quan hệ/ownership trước render, không dùng service key hoặc đổi quyền/RPC.
+- Đã gửi dùng quan hệ posts tùy chọn: claim và proof vẫn hiện khi RLS che tin. Tin không đọc được hoặc xóa mềm dùng nhãn không còn khả dụng, không có link chi tiết. Không lấy thông tin liên hệ người gửi; chỉ render trường cần thiết, không đưa owner/requester ID vào thẻ.
+- Proof chỉ có trong trang riêng tư, thu gọn bằng details/summary, render văn bản được escape; không ở URL/log/payload công khai. Trang force-dynamic/noindex, proxy hiện có đặt private/no-store. Ngày hiển thị theo Asia/Ho_Chi_Minh. Chưa nối hủy/chấp nhận/từ chối (A9a).
+- Unit/render và browser dùng fixture giả; kết quả, môi trường và giới hạn xem checkpoint A8b trong progress. Không suy rộng local Worker thành production HTTPS.
