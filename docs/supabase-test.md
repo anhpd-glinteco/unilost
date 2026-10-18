@@ -43,7 +43,7 @@ node --env-file=D:/Codex/work/unilost/a2/supabase-test.env scripts/test-permissi
 Hoặc nạp riêng các biến test vào process rồi chạy `npm run test:db`.
 Runner từ chối URL không khớp ref và không tự lấy cấu hình ứng dụng để tránh chạy nhầm production.
 
-- Runner dùng API quản trị tạo hai thành viên và một admin giả lập, password ngẫu nhiên chỉ trong bộ nhớ, email `@example.test`, không gửi email. Metadata cố tình chứa role admin; trigger phải vẫn tạo role user. Chỉ API quản trị mới gán admin test.
+- Runner dùng API quản trị tạo ba thành viên và một admin giả lập (chủ tin, người gửi claim, người ngoài độc lập và admin), password ngẫu nhiên chỉ trong bộ nhớ, email `@example.test`, không gửi email. Metadata cố tình chứa role admin; trigger phải vẫn tạo role user. Chỉ API quản trị mới gán admin test.
 - Kiểm tra đăng nhập password không ghi đè hồ sơ; tên/khoa tự sửa được, các trường hệ thống và hồ sơ người khác không sửa được. Khách không ghi được. Với tin/claim/ảnh/lịch sử/moderation, thử insert/update/delete trực tiếp cho cả bốn actor. Kiểm tra cả dữ liệu sau request và kết quả HTTP; không chấp nhận lỗi constraint làm bằng chứng quyền.
 - Storage được seed một file text giả; upload/overwrite/delete qua tài khoản thường và admin ứng dụng đều phải bị chặn. File gốc và danh sách file phải giữ nguyên.
 - Dọn đúng UUID/path tạo trong lần chạy, kể cả dữ liệu attack; không dùng truncate/reset hoặc xóa hàng có sẵn. Chỉ in PASS khi dọn xong. Nếu cleanup lỗi, log có run ID để rà đúng fixture; giữ cờ sửa hồ sơ tắt.
@@ -79,3 +79,13 @@ Chưa có workflow mutation tin/claim; quyền ghi của chúng đang khóa kể
 - Raw RLS cho chủ tin/admin đọc cả hàng deleted; truy vấn trang thêm `deleted_at=is.null` để mọi actor nhận 404 đối với tin xóa. Người lạ/khách không đọc pending/hidden. Không mở rộng quyền SELECT hay đưa service key vào app.
 - Browser dùng fixture Auth riêng: 25 trường hợp quyền xem, ID sai/không tồn tại và chuyển từ owner sang guest đạt; 1086px/390px không tràn ngang. Tài khoản/tin fixture đều dọn; đây không phải lượt kiểm tra email/PKCE mới.
 - Log/ảnh và giới hạn kiểm tra: `D:\Codex\outputs\unilost\a3b\verification.md`. Lỗi tải dữ liệu đã có unit/render tests; chưa mô phỏng DB outage trên browser. HTTPS/Worker còn chờ staging.
+
+## A5 — quyền đọc proof (18/10/2026)
+
+- Chạy cùng runner/lệnh A3a; không có migration mới. Bốn tài khoản fixture tách biệt chủ tin, requester, người ngoài và admin. Hai claim cùng tin có proof giả khác nhau; chỉ đọc dữ liệu fixture, không ghi proof vào log.
+- 100 kiểm tra REST bổ sung: năm vai trò gồm guest, năm trạng thái tin published/pending/hidden/xóa mềm/closed, mỗi tổ hợp kiểm tra danh sách theo tin, hai ID claim và `posts?select=id,claim_requests(id,proof)`.
+- Guest/người ngoài không nhận claim; requester chỉ nhận claim của mình; chủ tin/admin nhận cả hai. Tin không công khai/đã xóa mềm không làm mất quyền đọc claim trực tiếp của các bên liên quan. Truy vấn lồng còn chịu quyền đọc hàng tin: requester không nhận hàng tin ẩn/xóa, dù vẫn đọc trực tiếp claim của mình.
+- Runner giữ các kiểm tra chống ghi trực tiếp và bổ sung readback ID sáu bảng sau cleanup. Thử lỗi transport ở truy vấn A5 đầu tiên đã xác nhận cleanup vẫn chạy, không còn hàng fixture và bốn Auth user đều trả 404 khi đọc quản trị.
+- Script thử lỗi cùng log đã loại secret ở `D:\Codex\outputs\unilost\a5\check-failure-cleanup.mjs` và `failure-cleanup.log`. Chạy bằng `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/outputs/unilost/a5/check-failure-cleanup.mjs`; script nhập runner từ đường dẫn repo hiện tại.
+- Feed hiện dùng dữ liệu demo; truy vấn chi tiết không chọn claim/proof, app không log proof. Claim UI thật, mutation, kiểm tra đồng thời và HTTPS/Worker vẫn ngoài A5.
+- Kết quả hosted cuối: **315 checks PASS**, fixture đã dọn và readback sáu bảng đều rỗng. Lượt trước từng báo lỗi request cleanup moderation; đối chiếu không còn parent/Auth fixture, chạy lại đầy đủ đạt. Log cuối `D:\Codex\outputs\unilost\a5\hosted-rest-rerun.log`; lịch sử/giới hạn ở `verification.md` cùng thư mục.
