@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { readPost } from "@/features/posts/queries";
+import { ClaimSection } from "@/features/claims/claim-section";
 
 export const dynamic = "force-dynamic";
 const statuses = { searching: "Đang tìm", matched: "Có gợi ý phù hợp", verifying: "Đang xác minh", returned: "Đã hoàn trả", closed: "Đã đóng" };
@@ -33,7 +34,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
             <p>Trạng thái: {statuses[result.post.status]}</p>
             <p>Kiểm duyệt: {moderationLabels[result.post.moderation]}</p>
           </div>
-          <button disabled className="mt-8 max-w-full rounded-full bg-[#1c5546] px-5 py-3 font-bold text-white opacity-60">Yêu cầu nhận đồ chưa khả dụng</button>
+          <ClaimSection postId={result.post.id} />
         </div>
       </article>}
     </main>
