@@ -1,3 +1,4 @@
+import { ClaimDecisions } from "./claim-decisions";
 import Link from "next/link";
 import { claimStatusLabels } from "./claim-status";
 import { readClaimList, type ClaimListGroup } from "./queries";
@@ -31,6 +32,7 @@ export async function ClaimList({ group, pages }: { group: ClaimListGroup; pages
         <summary className="cursor-pointer font-semibold">Bằng chứng nhận đồ</summary>
         <p className="mt-3 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{claim.proof}</p>
       </details>
+      <ClaimDecisions claimId={claim.id} status={claim.status} group={group} canAccept={!!claim.posts && claim.posts.type === "found" && claim.posts.moderation === "published" && !claim.posts.deleted_at && ["searching", "matched"].includes(claim.posts.status)} />
     </article>)}</div>
     <nav aria-label={`Phân trang ${group === "sent" ? "đã gửi" : "đã nhận"}`} className="mt-5 flex flex-wrap items-center gap-4 text-sm text-[#1c5546]">
       {page > 1 && <Link className="underline" href={claimsListHref({ ...pages, [pageKey]: page - 1 })}>Trang trước</Link>}
