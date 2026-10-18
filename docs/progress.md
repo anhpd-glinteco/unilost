@@ -199,7 +199,7 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 
 ### A4 — hợp đồng claim — 18/10/2026
 
-- Triển khai local trên nhánh `codex/unilost-a3b-post-detail`, base `b44e3d9`; chưa commit/push/PR cho A4. Liên quan #8/#11/#27; không đóng issue hoặc sửa Sheet. Hai tệp `docs/report/README.md` và `docs/report/development-challenges.md` đang sửa từ phiên trước được giữ nguyên.
+- Code/spec A4 ở commit `878ce00`, nhánh `codex/unilost-a4-claim-contract`; [PR #51](https://github.com/anhpd-glinteco/unilost/pull/51) nối trên PR #50 (`codex/unilost-a3b-post-detail`, base commit `b44e3d9`). CI đang chạy sau khi mở PR. Đã ghi chú phần A4 trong #8/#11/#27; cả ba issue vẫn OPEN vì còn tiêu chí rộng hơn. Hai tệp `docs/report/README.md` và `docs/report/development-challenges.md` đang sửa từ phiên trước được giữ nguyên.
 - [Hợp đồng claim](../features/claims/README.md) là nguồn đặc tả chi tiết: ma trận quyền, điều kiện tạo, chuyển trạng thái, tính nguyên tử và nghiệm thu A5–A7. Đồng bộ liên kết/quy tắc trong plan và use case; đây là thiết kế mục tiêu, chưa phải bằng chứng claim thật đã hoạt động.
 - Chốt hủy/từ chối pending không phụ thuộc tin còn công khai/còn mở; giữ nguyên claim khác. Accepted chỉ khi tin found/published/chưa xóa/searching hoặc matched, chưa có accepted/completed; khóa tin và cập nhật claim/tin/lịch sử cùng giao dịch. Admin chỉ bổ sung quyền đọc kiểm duyệt, không quyết định thay chủ tin.
 - `claimSchema` trim đầu/cuối trước khi kiểm tra 10–1.000 ký tự, giữ nội dung bên trong; xuất `ClaimInput` suy luận từ schema, tái sử dụng `ClaimStatus`. Chưa có caller runtime của schema; không thêm API/type payload dự đoán cho luồng tương lai.
