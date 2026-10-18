@@ -59,7 +59,7 @@ Runner từ chối URL không khớp ref và không tự lấy cấu hình ứng
 
 ## Giới hạn còn lại
 
-Tạo tin found đã có ở A3a; tạo/hủy claim qua RPC được bổ sung ở A6. Ghi trực tiếp claim vẫn khóa kể cả admin ứng dụng; accept/reject và UI chưa hoàn tất. Ảnh bucket public vẫn truy cập được bằng URL đã biết (S05), chưa chuyển private/signed URL. API test tự động không thay thế email PKCE hoặc HTTPS/Worker. Không đóng #12/#36 chỉ vì unit test hoặc fixture mô phỏng đạt.
+Tạo tin found đã có ở A3a; tạo/hủy claim qua RPC được bổ sung ở A6. Ghi trực tiếp claim vẫn khóa kể cả admin ứng dụng; accept/reject được bổ sung ở A7, UI chưa hoàn tất. Ảnh bucket public vẫn truy cập được bằng URL đã biết (S05), chưa chuyển private/signed URL. API test tự động không thay thế email PKCE hoặc HTTPS/Worker. Không đóng #12/#36 chỉ vì unit test hoặc fixture mô phỏng đạt.
 
 
 ## A3a — tạo found (17/10/2026)
@@ -100,3 +100,15 @@ Tạo tin found đã có ở A3a; tạo/hủy claim qua RPC được bổ sung �
 - Minh chứng tại `D:\Codex\outputs\unilost\a6\`. Script `check-failure-cleanup.mjs` tại đó cố tình làm mất phản hồi sau RPC đã commit, xác nhận claim không được runner ghi nhận ID vẫn bị dọn qua cascade khi xóa đúng tin fixture, cùng readback bảng và bốn Auth user. Chạy bằng `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/outputs/unilost/a6/check-failure-cleanup.mjs`.
 - A6 không có browser claim UI; không coi password fixture/API hoặc PostgreSQL mô phỏng là nghiệm thu email, HTTPS/Worker, A7 hay production. Kết quả thực chạy xem checkpoint A6.
 - Kết quả cuối sau 0005: **433 checks PASS**, fixture đã dọn và readback sáu bảng đạt; gồm 118 kiểm tra A6 mới. Bốn SQL suite hosted PASS. Probe số/object/array đều bị từ chối; thử mất phản hồi sau commit xác nhận claim chưa ghi nhận ID vẫn được cascade dọn và bốn Auth user không còn. Xem `verification.md`, `hosted-rest.log`, `hosted-sql.png`, `proof-types-after.log`, `failure-cleanup.log` trong thư mục minh chứng A6. Lượt 426 trước sửa kiểu chỉ là lịch sử.
+
+## A7 — chấp nhận/từ chối claim (18/10/2026)
+
+- Sau 0005, đối chiếu đúng project test và xác nhận chưa có RPC/index A7. Áp dụng [0006](../supabase/migrations/0006_a7_decide_claims.sql) trong transaction rollback trước, rồi nguyên migration một lần. Nếu có duplicate accepted/completed hoặc schema drift thì dừng, không tự sửa dữ liệu. SQL Editor không tự ghi lịch sử migration CLI.
+- Chạy năm suite `a2_permissions.sql`, `a2_rls.sql`, `a3a_create_found.sql`, `a6_claims.sql`, [a7_claim_decisions.sql](../supabase/tests/a7_claim_decisions.sql). A7 cố tình gây lỗi ở bước ghi lịch sử và đối chiếu toàn hàng claim/tin cùng lịch sử sau rollback. Fixture, function/trigger thử lỗi đều nằm trong transaction tự rollback.
+- Runner giữ A2–A6, bổ sung quyền quyết định theo đối tượng, điều kiện accept, reject trên tin không công khai/đóng/xóa, index một người nhận, projection đọc lại của chủ tin và ba kiểu tranh chấp. Mỗi kiểu tranh chấp chạy ba fixture độc lập; đây không phải đo tải. Chạy cùng lệnh test-only ở A3a.
+- Cleanup dọn đúng fixture, lịch sử tự sinh được cascade theo tin; readback thêm status_history theo post_id để bắt hàng chưa kịp ghi nhận ID khi mất phản hồi.
+- Minh chứng và script thử mất phản hồi sau accept đã commit ở `D:/Codex/outputs/unilost/a7/`. Chạy bằng `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/outputs/unilost/a7/check-failure-cleanup.mjs`. Không ghi proof thật/token/key vào log.
+- UI/browser claim, HTTPS/Worker, C1 và production không thuộc nghiệm thu A7.
+
+- Lượt hosted đầy đủ sau 0006: **558 checks PASS** (125 mới A7), fixture được dọn, readback sáu bảng và lịch sử theo post_id đạt. Năm SQL suite hosted và 214 unit test/typecheck/lint/build đạt; xem checkpoint A7 và minh chứng ngoài Git.
+- Thử mất phản hồi sau accept đã commit PASS: lịch sử chưa được ghi nhận ID vẫn được cascade dọn theo tin; readback bảng/lịch sử đạt, claim không còn và bốn Auth user trả 404. Log `failure-cleanup.log` trong thư mục A7.

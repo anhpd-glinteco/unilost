@@ -286,6 +286,125 @@ export async function runPermissionTests(env = process.env) {
     denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: randomUUID() }), "42501");
     denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: "invalid" }), "22P02");
     console.log("A6 PASS: proof vectors, create/cancel permissions, post states, duplicates and concurrent writes.");
+    const seedClaim = async (post, actor = outsider) => {
+      const row = { id: randomUUID(), post_id: post.id, requester_id: actor.id, proof: "Disposable A7 proof" };
+      ids.claim_requests.push(row.id);
+      return requireResult(await service.from("claim_requests").insert(row).select().single(), "Seed A7 claim");
+    };
+    const decisionState = async (post) => ({
+      post: requireResult(await service.from("posts").select("*").eq("id", post.id).single(), "Read A7 post"),
+      claims: requireResult(await service.from("claim_requests").select("*").eq("post_id", post.id).order("id"), "Read A7 claims"),
+      history: requireResult(await service.from("status_history").select("*").eq("post_id", post.id), "Read A7 history"),
+    });
+    const assertAccepted = (before, after, claimId) => {
+      const old = before.claims.find((row) => row.id === claimId);
+      const saved = after.claims.find((row) => row.id === claimId);
+      assert(saved.updated_at >= old.updated_at);
+      assert.deepEqual(saved, { ...old, status: "accepted", updated_at: saved.updated_at });
+      assert(after.post.updated_at >= before.post.updated_at);
+      assert.deepEqual(after.post, { ...before.post, status: "verifying", updated_at: after.post.updated_at });
+      assert.deepEqual(after.claims.filter((row) => row.id !== claimId), before.claims.filter((row) => row.id !== claimId));
+      assert.equal(after.history.length, 1);
+      const history = after.history[0];
+      assert.equal(history.from_status, before.post.status); assert.equal(history.to_status, "verifying");
+      assert.equal(history.actor_id, before.post.owner_id); assert.equal(history.note, null);
+      ids.status_history.push(history.id); checks++;
+    };
+    for (const status of ["searching", "matched"]) {
+      stage = `A7 accept ${status}`;
+      const post = await newPost({ status });
+      const claim = await seedClaim(post); await seedClaim(post, stranger);
+      const before = await decisionState(post);
+      for (const actor of [null, outsider, stranger, admin]) {
+        for (const name of ["accept_claim", "reject_claim"]) denyRpc(await rpc(actor, name, { p_claim_id: claim.id }), "42501");
+      }
+      assert.deepEqual(await decisionState(post), before); checks++;
+      const accepted = await rpc(member, "accept_claim", { p_claim_id: claim.id });
+      assert(accepted.response.ok && accepted.body === claim.id); checks++;
+      assertAccepted(before, await decisionState(post), claim.id);
+      // Exercise the exact owner-scoped recovery projection used by the server action.
+      const readback = await request(member.token, "claim_requests", "GET", null, claim.id,
+        `select=id,status,posts!inner(owner_id)&posts.owner_id=eq.${member.id}`);
+      assert(readback.response.ok && readback.body.length === 1 && readback.body[0].status === "accepted"); checks++;
+      const foreign = await request(admin.token, "claim_requests", "GET", null, claim.id,
+        `select=id,status,posts!inner(owner_id)&posts.owner_id=eq.${admin.id}`);
+      assert(foreign.response.ok && foreign.body.length === 0); checks++;
+      denyRpc(await rpc(member, "accept_claim", { p_claim_id: claim.id }), "42501");
+      denyRpc(await rpc(member, "reject_claim", { p_claim_id: claim.id }), "42501");
+    }
+    for (const change of [{ moderation: "pending" }, { moderation: "hidden" }, { deleted_at: "2026-01-02T00:00:00Z" },
+      { status: "closed" }, { status: "verifying" }, { status: "returned" }, { type: "lost" }]) {
+      stage = "A7 ineligible accept and unrestricted pending reject";
+      const post = await newPost(change); const claim = await seedClaim(post); await seedClaim(post, stranger);
+      const before = await decisionState(post);
+      denyRpc(await rpc(member, "accept_claim", { p_claim_id: claim.id }), "42501");
+      assert.deepEqual(await decisionState(post), before); checks++;
+      const rejected = await rpc(member, "reject_claim", { p_claim_id: claim.id });
+      assert(rejected.response.ok && rejected.body === claim.id); checks++;
+      const after = await decisionState(post);
+      const saved = after.claims.find((row) => row.id === claim.id);
+      assert(saved.updated_at >= claim.updated_at);
+      assert.deepEqual(saved, { ...claim, status: "rejected", updated_at: saved.updated_at });
+      assert.deepEqual(after.post, before.post); assert.deepEqual(after.history, before.history);
+      assert.deepEqual(after.claims.filter((row) => row.id !== claim.id), before.claims.filter((row) => row.id !== claim.id)); checks++;
+      denyRpc(await rpc(member, "reject_claim", { p_claim_id: claim.id }), "42501");
+    }
+    for (const status of ["accepted", "completed", "cancelled", "rejected"]) {
+      stage = `A7 processed ${status}`;
+      const post = await newPost(); const claim = await seedClaim(post);
+      requireResult(await service.from("claim_requests").update({ status }).eq("id", claim.id).select(), "Set A7 processed fixture");
+      const before = await decisionState(post);
+      for (const name of ["accept_claim", "reject_claim"]) denyRpc(await rpc(member, name, { p_claim_id: claim.id }), "42501");
+      assert.deepEqual(await decisionState(post), before); checks++;
+      if (["accepted", "completed"].includes(status)) {
+        const other = await seedClaim(post, stranger);
+        const conflict = await service.from("claim_requests").update({ status }).eq("id", other.id);
+        assert.equal(conflict.error?.code, "23505"); checks++;
+        denyRpc(await rpc(member, "accept_claim", { p_claim_id: other.id }), "42501");
+      }
+    }
+    for (const competing of ["accept_claim", "cancel_claim", "reject_claim"]) {
+      // Repeat independent fixtures to exercise both lock ordering and conditional pending updates.
+      for (let iteration = 0; iteration < 3; iteration++) {
+        stage = `A7 race accept versus ${competing}`;
+        const post = await newPost(); const claim = await seedClaim(post); const other = await seedClaim(post, stranger);
+        const before = await decisionState(post);
+        const secondId = competing === "accept_claim" ? other.id : claim.id;
+        const race = await Promise.all([
+          rpc(member, "accept_claim", { p_claim_id: claim.id }),
+          rpc(competing === "cancel_claim" ? outsider : member, competing, { p_claim_id: secondId }),
+        ]);
+        assert.equal(race.filter((result) => result.response.ok).length, 1); checks++;
+        denyRpc(race.find((result) => !result.response.ok), "42501");
+        const after = await decisionState(post);
+        const winner = race.findIndex((result) => result.response.ok);
+        if (winner === 0 || competing === "accept_claim") {
+          assertAccepted(before, after, winner === 0 ? claim.id : other.id);
+          // The other pending claim remains cancellable/rejectable while the post verifies.
+          const remaining = after.claims.find((row) => row.status === "pending");
+          const reject = await rpc(member, "reject_claim", { p_claim_id: remaining.id });
+          assert(reject.response.ok); checks++;
+        } else {
+          assert.deepEqual(after.post, before.post); assert.equal(after.history.length, 0);
+          const changed = after.claims.find((row) => row.id === claim.id);
+          assert.deepEqual(changed, { ...claim, status: competing === "cancel_claim" ? "cancelled" : "rejected", updated_at: changed.updated_at });
+          assert.deepEqual(after.claims.find((row) => row.id === other.id), other); checks++;
+        }
+      }
+    }
+    stage = "A7 admin as actual owner and invalid payloads";
+    const adminPost = await newPost({ owner_id: admin.id }); const adminClaim = await seedClaim(adminPost);
+    const adminBefore = await decisionState(adminPost);
+    assert((await rpc(admin, "accept_claim", { p_claim_id: adminClaim.id })).response.ok); checks++;
+    assertAccepted(adminBefore, await decisionState(adminPost), adminClaim.id);
+    const pendingAdminClaim = await seedClaim(adminPost, stranger);
+    assert((await rpc(admin, "reject_claim", { p_claim_id: pendingAdminClaim.id })).response.ok); checks++;
+    for (const name of ["accept_claim", "reject_claim"]) {
+      denyRpc(await rpc(member, name, { p_claim_id: randomUUID() }), "42501");
+      denyRpc(await rpc(member, name, { p_claim_id: "invalid" }), "22P02");
+      denyRpc(await rpc(member, name, { p_claim_id: adminClaim.id, owner_id: member.id }), "PGRST202");
+    }
+    console.log("A7 PASS: owner decisions, atomic effects, recovery projection, unique recipients and three race variants.");
     for (const actor of actors) {
       console.log(`Checking ${actor.name}: profile, REST and Storage permissions...`);
       stage = `${actor.name}: read and profile checks`;
@@ -403,6 +522,10 @@ export async function runPermissionTests(env = process.env) {
       try { if ((await service.auth.admin.deleteUser(user.id)).error) cleanupErrors.push("fixture user"); }
       catch { cleanupErrors.push("fixture user"); }
     }
+    try {
+      const history = await service.from("status_history").select("id").in("post_id", ids.posts);
+      if (history.error || !Array.isArray(history.data) || history.data.length) cleanupErrors.push("history by post readback");
+    } catch { cleanupErrors.push("history by post readback"); }
     for (const table of tables) {
       try {
         const remaining = await service.from(table).select("id").in("id", ids[table]);
