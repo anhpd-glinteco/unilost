@@ -6,7 +6,7 @@ const claimSchema = z.object({ id: z.string().uuid(), status: z.enum(["pending",
 const listedClaimSchema = claimSchema.extend({
   post_id: z.string().uuid(), requester_id: z.string().uuid(), proof: z.string(),
   created_at: z.string().datetime({ offset: true }),
-  posts: z.object({ id: z.string().uuid(), owner_id: z.string().uuid(), title: z.string().min(1), deleted_at: z.string().datetime({ offset: true }).nullable() }).nullable(),
+  posts: z.object({ id: z.string().uuid(), owner_id: z.string().uuid(), title: z.string().min(1), type: z.enum(["found", "lost"]), status: z.enum(["searching", "matched", "verifying", "returned", "closed"]), moderation: z.enum(["published", "hidden", "pending"]), deleted_at: z.string().datetime({ offset: true }).nullable() }).nullable(),
 });
 export type ListedClaim = z.infer<typeof listedClaimSchema>;
 export type ClaimListResult = { kind: "error" } | { kind: "ready"; claims: ListedClaim[]; hasNext: boolean };
@@ -27,7 +27,7 @@ export async function readClaimList(group: ClaimListGroup, page: number): Promis
     if (!client) return { kind: "error" };
     const relation = group === "received" ? "posts!inner" : "posts";
     const query = client.from("claim_requests")
-      .select(`id,post_id,requester_id,proof,status,created_at,${relation}(id,owner_id,title,deleted_at)`);
+      .select(`id,post_id,requester_id,proof,status,created_at,${relation}(id,owner_id,title,type,status,moderation,deleted_at)`);
     const filtered = group === "received" ? query.eq("posts.owner_id", account.user.id) : query.eq("requester_id", account.user.id);
     const start = (page - 1) * claimsPageSize;
     const result = await filtered.order("created_at", { ascending: false }).order("id", { ascending: false }).range(start, start + claimsPageSize);

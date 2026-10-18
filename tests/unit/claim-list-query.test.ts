@@ -5,7 +5,7 @@ vi.mock("@/lib/auth/account", () => ({ getAccount: mocks.account }));
 vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: mocks.client }));
 const userId = "12345678-1234-4234-8234-123456789abc";
 const otherId = "12345678-1234-4234-8234-123456789abd";
-const row = { id: otherId, post_id: otherId, requester_id: userId, proof: "Fake proof only", status: "pending", created_at: "2026-10-18T10:00:00Z", posts: { id: otherId, owner_id: otherId, title: "Fake post", deleted_at: null } };
+const row = { id: otherId, post_id: otherId, requester_id: userId, proof: "Fake proof only", status: "pending", created_at: "2026-10-18T10:00:00Z", posts: { id: otherId, owner_id: otherId, title: "Fake post", type: "found", status: "searching", moderation: "published", deleted_at: null } };
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.account.mockResolvedValue({ user: { id: userId }, profile: { id: userId, role: "user" } });
@@ -23,7 +23,7 @@ it.each(["user", "admin"])("filters sent list to authenticated requester for %s"
   expect(await readClaimList("sent", 2)).toEqual({ kind: "ready", claims: [row], hasNext: false });
   expect(mocks.client).toHaveBeenCalledWith(true);
   expect(mocks.eq).toHaveBeenCalledWith("requester_id", userId);
-  expect(mocks.select).toHaveBeenCalledWith("id,post_id,requester_id,proof,status,created_at,posts(id,owner_id,title,deleted_at)");
+  expect(mocks.select).toHaveBeenCalledWith("id,post_id,requester_id,proof,status,created_at,posts(id,owner_id,title,type,status,moderation,deleted_at)");
   expect(mocks.order.mock.calls).toEqual([["created_at", { ascending: false }], ["id", { ascending: false }]]);
   expect(mocks.range).toHaveBeenCalledWith(20, 40);
 });
@@ -64,4 +64,9 @@ it.each(["guest", "profile", "client", "query", "throw", "invalid", "wrong-reque
 it.each([null, row.posts])("rejects received rows without current ownership %j", async posts => {
   mocks.range.mockResolvedValue({ data: [{ ...row, posts }] });
   expect(await readClaimList("received", 1)).toEqual({ kind: "error" });
+});
+
+it.each(["type", "status", "moderation"])("rejects invalid post %s used for decision eligibility", async field => {
+  mocks.range.mockResolvedValue({ data: [{ ...row, posts: { ...row.posts, [field]: "unknown" } }] });
+  expect(await readClaimList("sent", 1)).toEqual({ kind: "error" });
 });
