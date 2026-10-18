@@ -59,7 +59,7 @@ Runner từ chối URL không khớp ref và không tự lấy cấu hình ứng
 
 ## Giới hạn còn lại
 
-Chưa có workflow mutation tin/claim; quyền ghi của chúng đang khóa kể cả admin ứng dụng. Ảnh bucket public vẫn truy cập được bằng URL đã biết (S05), chưa chuyển private/signed URL. API test tự động không thay thế email PKCE, HTTPS/Worker và kiểm tra đồng thời ở các phiên sau. Không đóng #12/#36 chỉ vì unit test hoặc fixture mô phỏng đạt.
+Tạo tin found đã có ở A3a; tạo/hủy claim qua RPC được bổ sung ở A6. Ghi trực tiếp claim vẫn khóa kể cả admin ứng dụng; accept/reject và UI chưa hoàn tất. Ảnh bucket public vẫn truy cập được bằng URL đã biết (S05), chưa chuyển private/signed URL. API test tự động không thay thế email PKCE hoặc HTTPS/Worker. Không đóng #12/#36 chỉ vì unit test hoặc fixture mô phỏng đạt.
 
 
 ## A3a — tạo found (17/10/2026)
@@ -89,3 +89,14 @@ Chưa có workflow mutation tin/claim; quyền ghi của chúng đang khóa kể
 - Script thử lỗi cùng log đã loại secret ở `D:\Codex\outputs\unilost\a5\check-failure-cleanup.mjs` và `failure-cleanup.log`. Chạy bằng `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/outputs/unilost/a5/check-failure-cleanup.mjs`; script nhập runner từ đường dẫn repo hiện tại.
 - Feed hiện dùng dữ liệu demo; truy vấn chi tiết không chọn claim/proof, app không log proof. Claim UI thật, mutation, kiểm tra đồng thời và HTTPS/Worker vẫn ngoài A5.
 - Kết quả hosted cuối: **315 checks PASS**, fixture đã dọn và readback sáu bảng đều rỗng. Lượt trước từng báo lỗi request cleanup moderation; đối chiếu không còn parent/Auth fixture, chạy lại đầy đủ đạt. Log cuối `D:\Codex\outputs\unilost\a5\hosted-rest-rerun.log`; lịch sử/giới hạn ở `verification.md` cùng thư mục.
+
+## A6 — tạo/hủy claim (18/10/2026)
+
+- Xác nhận đúng project test; đọc schema/grants và sự tồn tại hai RPC trước khi áp dụng [0004](../supabase/migrations/0004_a6_create_cancel_claims.sql). Migration chỉ thêm function/grant EXECUTE, không sửa dữ liệu hay thêm constraint trên proof cũ. Nếu RPC đã có hoặc schema drift thì đối chiếu trước, không ghi đè function hoặc chạy lại migration mù.
+- Preflight bằng nội dung 0004 thay `commit` cuối thành `rollback`, kiểm tra hai function không còn sau rollback. Sau đó áp dụng nguyên migration một lần qua SQL Editor. Không giả lập migration history CLI; không áp dụng production.
+- Áp dụng tiếp [0005](../supabase/migrations/0005_a6_claim_proof_json_type.sql), thay tham số proof text bằng jsonb chỉ nhận JSON string. Probe API thật phát hiện PostgREST ép số/object/array thành text ở 0004; giữ nguyên migration đã áp dụng và khắc phục bằng migration kế tiếp. Caller RPC vẫn gửi chuỗi trong JSON như cũ, không tự JSON.stringify proof trong action.
+- Chạy `supabase/tests/a2_permissions.sql`, `a2_rls.sql`, `a3a_create_found.sql` và `a6_claims.sql` sau 0005; fixture SQL tự rollback. Chạy runner theo lệnh A3a với biến test-only hiện có, không dùng service key cho request được nghiệm thu.
+- Runner giữ toàn bộ A5 và chống ghi trực tiếp, thêm tạo/hủy qua RPC: 12 vector proof dùng chung TypeScript, tự claim/giả danh/trùng/tin không hợp lệ, quyền admin theo đối tượng, hủy pending trên tin published/pending/hidden/deleted/closed, không đổi dữ liệu khác, không gửi lại sau xử lý, hai tạo hoặc hai hủy cạnh tranh chỉ một thành công.
+- Minh chứng tại `D:\Codex\outputs\unilost\a6\`. Script `check-failure-cleanup.mjs` tại đó cố tình làm mất phản hồi sau RPC đã commit, xác nhận claim không được runner ghi nhận ID vẫn bị dọn qua cascade khi xóa đúng tin fixture, cùng readback bảng và bốn Auth user. Chạy bằng `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/outputs/unilost/a6/check-failure-cleanup.mjs`.
+- A6 không có browser claim UI; không coi password fixture/API hoặc PostgreSQL mô phỏng là nghiệm thu email, HTTPS/Worker, A7 hay production. Kết quả thực chạy xem checkpoint A6.
+- Kết quả cuối sau 0005: **433 checks PASS**, fixture đã dọn và readback sáu bảng đạt; gồm 118 kiểm tra A6 mới. Bốn SQL suite hosted PASS. Probe số/object/array đều bị từ chối; thử mất phản hồi sau commit xác nhận claim chưa ghi nhận ID vẫn được cascade dọn và bốn Auth user không còn. Xem `verification.md`, `hosted-rest.log`, `hosted-sql.png`, `proof-types-after.log`, `failure-cleanup.log` trong thư mục minh chứng A6. Lượt 426 trước sửa kiểu chỉ là lịch sử.

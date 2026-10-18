@@ -45,7 +45,7 @@ A4 có thể làm phần đặc tả sau A0 nhưng chỉ cập nhật hợp đ�
 
 ### Quy tắc claim đã chọn
 
-Nguồn đặc tả chi tiết từ A4: [hợp đồng claim, ma trận quyền và nghiệm thu](../features/claims/README.md). Đây là thiết kế mục tiêu; quyền ghi claim hiện vẫn bị khóa ở A2.
+Nguồn đặc tả chi tiết từ A4: [hợp đồng claim, ma trận quyền và nghiệm thu](../features/claims/README.md). Quyền ghi trực tiếp claim vẫn khóa ở A2; A6 bổ sung RPC tạo/hủy có kiểm tra quyền. Accept/reject và UI tiếp tục A7–A9.
 
 - Server lấy danh tính từ Supabase Auth đã xác thực; không nhận requester/role/chủ tin từ client. Header ChatGPT không thay thế danh tính Supabase.
 - Chỉ claim tin found đã published, chưa xóa, còn mở (searching/matched); không tự claim. Proof được trim đầu/cuối trước khi kiểm tra 10–1.000 ký tự và lưu giá trị đã parse.

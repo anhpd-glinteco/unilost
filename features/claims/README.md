@@ -1,6 +1,6 @@
 # Hợp đồng claim — A4
 
-Chốt ngày 18/10/2026 cho #8, #11, #27. Đây là **thiết kế mục tiêu** cho A5–A7, chưa phải luồng claim đã triển khai. [Kế hoạch](../../docs/plan.md), [use case UC04–UC07](../../docs/report/use-cases.md) và [checkpoint](../../docs/progress.md) theo dõi phạm vi và bằng chứng thực tế.
+Chốt ngày 18/10/2026 cho #8, #11, #27. Hợp đồng A4 là thiết kế mục tiêu; kết quả triển khai A5/A6 được ghi riêng bên dưới, chưa phải luồng UI claim hoàn chỉnh. [Kế hoạch](../../docs/plan.md), [use case UC04–UC07](../../docs/report/use-cases.md) và [checkpoint](../../docs/progress.md) theo dõi phạm vi và bằng chứng thực tế.
 
 ## Danh tính, input và điều kiện tạo
 
@@ -55,6 +55,17 @@ Unique theo người/tin chưa bảo đảm một accepted/completed trên toàn
 - **A7:** chỉ chủ tin quyết định; từ chối pending được khi tin đã ẩn/đóng/xóa; accepted kiểm tra lại đủ điều kiện; hai accept cạnh tranh chỉ một thành công; accept/hủy cạnh tranh không ghi đè trạng thái; lỗi giữa giao dịch rollback claim/tin/lịch sử; giữ nguyên claim khác và xử lý thao tác lặp an toàn.
 
 Các tiêu chí A5–A7 là đầu việc tương lai, không phải kết quả kiểm thử của A4. UI thật và E2E thuộc A8–A9; hoàn trả thuộc C1.
+
+## Triển khai A6 — tạo/hủy ở DB và server
+
+- [Migration 0004](../../supabase/migrations/0004_a6_create_cancel_claims.sql) thêm tạo/hủy; [0005](../../supabase/migrations/0005_a6_claim_proof_json_type.sql) thay create bằng `create_claim(p_post_id uuid, p_proof jsonb)`, chỉ nhận JSON string để chặn PostgREST ép kiểu số/object/array thành text. `cancel_claim(p_claim_id uuid)` giữ nguyên; cả hai trả UUID khi ghi thành công. Chỉ `authenticated` được EXECUTE; quyền ghi trực tiếp bảng/cột claim vẫn khóa. Không sửa migration đã áp dụng hoặc mở accept/reject.
+- Hai RPC dùng `auth.uid()` và yêu cầu hồ sơ tồn tại, không nhận danh tính/role/status từ client. SECURITY DEFINER dùng search_path rỗng và tên bảng có schema. Create khóa hàng tin, kiểm tra lại đủ điều kiện, trim/đếm UTF-16 như JavaScript và INSERT pending; unique sẵn có chống gửi lại, kể cả sau hủy/từ chối.
+- Cancel dùng UPDATE có điều kiện requester/pending, đổi status/updated_at trong một statement; không cần quyền xem tin, không đổi tin/lịch sử/claim khác. Lặp hoặc thua tranh chấp bị từ chối. A7 phải giữ kiểm tra trạng thái tại thời điểm ghi khi thêm accept/reject.
+- [Server actions](actions.ts) xuất `createClaim`/`cancelClaim`, cùng trạng thái `{ error, claimId, status }`. Input FormData chỉ lấy `postId`/`proof` hoặc `claimId`; UUID và proof được kiểm tra trước RPC, dùng phiên Supabase, không dùng service key.
+- Nếu RPC lỗi/mất phản hồi/thiếu UUID hợp lệ, action đọc lại đúng claim của người gửi, chỉ chọn id/status. Có hàng thì trả trạng thái đã xác nhận với thông báo thao tác chưa được xác nhận thành công; không coi đó là lần tạo/hủy mới thành công. Không có hàng hoặc đọc lỗi thì trả kết quả chưa xác nhận; không tự thử lại ghi.
+- [Unit tests](../../tests/unit/claim-actions.test.ts), [SQL assertions](../../supabase/tests/a6_claims.sql) và runner hosted dùng proof giả. [12 vector](../../tests/fixtures/claim-proofs.json) dùng chung TypeScript và DB runner, gồm emoji, biên độ dài, toàn khoảng trắng, toàn bộ tập trim ECMAScript và khoảng trắng bên trong. PostgreSQL text không lưu NUL hoặc surrogate Unicode không hợp lệ; lỗi transport/encoding vẫn được xử lý an toàn, không báo thành công.
+- UI/action callers thuộc A8–A9, chưa nối vào trang demo. Kết quả thực chạy và giới hạn được ghi tại checkpoint A6 trong progress.
+- Nghiệm thu A6 sau 0005: 433 kiểm tra hosted (118 mới), bốn SQL suite và 196 unit test đạt; hai tạo/hai hủy cạnh tranh chỉ một thành công, cleanup đạt cả khi mất phản hồi sau commit. Accept/reject và UI chưa nghiệm thu; không suy rộng kết quả project test thành production.
 
 ## Kiểm chứng A5 — 18/10/2026
 

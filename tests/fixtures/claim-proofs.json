@@ -1,0 +1,14 @@
+[
+  { "text": "a", "repeat": 9, "valid": false },
+  { "text": "a", "repeat": 10, "valid": true },
+  { "text": "a", "repeat": 1000, "valid": true },
+  { "text": "a", "repeat": 1001, "valid": false },
+  { "text": "😀", "repeat": 4, "valid": false },
+  { "text": "😀", "repeat": 5, "valid": true },
+  { "text": "😀", "repeat": 500, "valid": true },
+  { "text": "😀", "repeat": 501, "valid": false },
+  { "text": "  ab  cd  ef  ", "repeat": 1, "valid": true },
+  { "text": "\t\n\r\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff", "repeat": 2, "valid": false },
+  { "text": "\t\n\r\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeffabcdefghij\ufeff\u3000\u205f\u202f\u2029\u2028\u200a\u2009\u2008\u2007\u2006\u2005\u2004\u2003\u2002\u2001\u2000\u1680\u00a0 \u000c\u000b\r\n\t", "repeat": 1, "valid": true },
+  { "text": "\u0085abcdefgh\u0085", "repeat": 1, "valid": true }
+]
