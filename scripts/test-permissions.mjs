@@ -43,10 +43,10 @@ export async function runPermissionTests(env = process.env) {
   const snapshot = async () => Object.fromEntries(await Promise.all(tables.map(async (table) => [table,
     requireResult(await service.from(table).select("*").in("id", ids[table]).order("id"), `Read fixture ${table}`),
   ])));
-  const request = async (token, table, method, payload, id) => {
+  const request = async (token, table, method, payload, id, query = "") => {
     const headers = { apikey: config.key, "Content-Type": "application/json", Prefer: "return=representation" };
     if (token || config.key.split(".").length === 3) headers.Authorization = `Bearer ${token || config.key}`;
-    const response = await fetch(`${config.url}/rest/v1/${table}${id ? `?id=eq.${id}` : ""}`, {
+    const response = await fetch(`${config.url}/rest/v1/${table}?${id ? `id=eq.${id}&` : ""}${query}`, {
       method, headers, body: payload ? JSON.stringify(payload) : undefined, redirect: "error",
     });
     const body = await response.json();
@@ -58,7 +58,7 @@ export async function runPermissionTests(env = process.env) {
   };
   try {
     // Admin-created fake users test Auth/trigger/RLS, not email delivery or PKCE.
-    for (const index of [0, 1, 2]) {
+    for (const index of [0, 1, 2, 3]) {
       const email = `a2-${run}-${index}@example.test`;
       const password = randomBytes(32).toString("base64url");
       const result = requireResult(await service.auth.admin.createUser({
@@ -79,7 +79,7 @@ export async function runPermissionTests(env = process.env) {
       assert.deepEqual(after, profile, "Login must preserve profile");
       checks += 3;
     }
-    const [member, stranger, admin] = users;
+    const [member, stranger, admin, outsider] = users;
     requireResult(await service.from("profiles").update({ role: "admin" }).eq("id", admin.id).select().single(), "Assign fixture admin through trusted API");
     const posts = ids.posts.map((id) => ({
       id, owner_id: member.id, type: "found", title: `A2 ${run}`, category: "other", color: "black",
@@ -120,6 +120,53 @@ export async function runPermissionTests(env = process.env) {
       }
     }
     requireResult(await service.from("posts").update({ moderation: "published", deleted_at: null }).eq("id", posts[0].id).select(), "Restore disposable post");
+    stage = "A5 seed second claim";
+    const otherClaim = { id: randomUUID(), post_id: posts[0].id, requester_id: admin.id,
+      proof: "Another disposable fake proof", status: "pending" };
+    ids.claim_requests.push(otherClaim.id);
+    requireResult(await service.from("claim_requests").insert(otherClaim).select(), "Seed second disposable claim");
+    const claimActors = [{ name: "guest", token: "", id: null }, { name: "owner", ...member },
+      { name: "requester", ...stranger }, { name: "stranger", ...outsider }, { name: "admin", ...admin }];
+    for (const state of ["published", "pending", "hidden", "deleted", "closed"]) {
+      stage = `A5 ${state}: set fixture visibility`;
+      requireResult(await service.from("posts").update({
+        moderation: ["pending", "hidden"].includes(state) ? state : "published",
+        deleted_at: state === "deleted" ? "2026-01-02T00:00:00Z" : null,
+        status: state === "closed" ? "closed" : "searching",
+      }).eq("id", posts[0].id).select(), "Set claim fixture visibility");
+      for (const actor of claimActors) {
+        stage = `A5 ${state}: ${actor.name} claim reads`;
+        const privileged = [member.id, admin.id].includes(actor.id);
+        const expected = privileged ? [rows.claim_requests[0], otherClaim]
+          : actor.id === stranger.id ? rows.claim_requests : [];
+        const assertClaims = (actual, wanted) => {
+          assert(Array.isArray(actual) && actual.length === wanted.length, "Unexpected claim count");
+          for (const row of wanted) {
+            const found = actual.find((item) => item.id === row.id);
+            assert(found?.proof === row.proof, "Unexpected claim proof");
+          }
+        };
+        const list = await request(actor.token, "claim_requests", "GET", null, null,
+          `post_id=eq.${posts[0].id}&select=id,proof`);
+        assert(list.response.ok, "Claim list request failed");
+        assertClaims(list.body, expected); checks++;
+        for (const claim of [rows.claim_requests[0], otherClaim]) {
+          const read = await request(actor.token, "claim_requests", "GET", null, claim.id, "select=id,proof");
+          assert(read.response.ok, "Claim ID request failed");
+          assertClaims(read.body, expected.filter((row) => row.id === claim.id)); checks++;
+        }
+        const embedded = await request(actor.token, "posts", "GET", null, posts[0].id,
+          "select=id,claim_requests(id,proof)");
+        const visible = privileged || ["published", "closed"].includes(state);
+        assert(embedded.response.ok && Array.isArray(embedded.body) && embedded.body.length === (visible ? 1 : 0),
+          "Unexpected embedded post visibility");
+        if (visible) assertClaims(embedded.body[0].claim_requests, expected);
+        checks++;
+      }
+    }
+    requireResult(await service.from("posts").update({ moderation: "published", deleted_at: null,
+      status: "searching" }).eq("id", posts[0].id).select(), "Restore claim fixture post");
+    console.log("A5 PASS: 100 claim list/ID/embedded reads across five actors and five post states.");
     for (const actor of actors) {
       console.log(`Checking ${actor.name}: profile, REST and Storage permissions...`);
       stage = `${actor.name}: read and profile checks`;
@@ -236,6 +283,12 @@ export async function runPermissionTests(env = process.env) {
     for (const user of users) {
       try { if ((await service.auth.admin.deleteUser(user.id)).error) cleanupErrors.push("fixture user"); }
       catch { cleanupErrors.push("fixture user"); }
+    }
+    for (const table of tables) {
+      try {
+        const remaining = await service.from(table).select("id").in("id", ids[table]);
+        if (remaining.error || !Array.isArray(remaining.data) || remaining.data.length) cleanupErrors.push(`${table} readback`);
+      } catch { cleanupErrors.push(`${table} readback`); }
     }
   }
   assert(!cleanupErrors.length, `Fixture cleanup failed: ${cleanupErrors.join(", ")}; run ${run}. Do not enable profile editing.`);

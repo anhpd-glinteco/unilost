@@ -55,3 +55,11 @@ Unique theo người/tin chưa bảo đảm một accepted/completed trên toàn
 - **A7:** chỉ chủ tin quyết định; từ chối pending được khi tin đã ẩn/đóng/xóa; accepted kiểm tra lại đủ điều kiện; hai accept cạnh tranh chỉ một thành công; accept/hủy cạnh tranh không ghi đè trạng thái; lỗi giữa giao dịch rollback claim/tin/lịch sử; giữ nguyên claim khác và xử lý thao tác lặp an toàn.
 
 Các tiêu chí A5–A7 là đầu việc tương lai, không phải kết quả kiểm thử của A4. UI thật và E2E thuộc A8–A9; hoàn trả thuộc C1.
+
+## Kiểm chứng A5 — 18/10/2026
+
+- Runner `scripts/test-permissions.mjs` đã kiểm tra 100 lượt REST đọc claim/proof trên project Supabase test: guest/requester/owner/stranger/admin × published/pending/hidden/xóa mềm/closed × danh sách theo tin, hai ID claim và quan hệ lồng từ tin.
+- Guest/người ngoài không đọc được claim; requester chỉ đọc claim của mình, không đọc claim khác cùng tin; owner/admin đọc cả hai. Quyền đọc trực tiếp vẫn giữ trên tin ẩn, đóng hoặc xóa mềm. Truy vấn lồng chỉ trả claim khi cả hàng tin và claim đều qua RLS; requester không xem được tin ẩn/xóa nhưng vẫn đọc trực tiếp claim của mình.
+- Chính sách SELECT hiện tại đạt ma trận này, không cần migration hay thay grants. Các kiểm tra chống ghi trực tiếp vẫn giữ; A6/A7 chưa triển khai.
+- Rà mã listing công khai: feed dùng mock posts; query chi tiết chỉ chọn trường tin, không lấy claim/proof; không có logging proof trong app. Trang dashboard claim vẫn là demo sau đăng nhập, chưa đọc claim thật. Đây chưa phải nghiệm thu UI riêng tư A8.
+- Đã thử lỗi transport ở lượt đọc A5 đầu tiên: runner đi qua `finally`, readback sáu bảng không còn fixture và cả bốn Auth user đã bị xóa. Không in response/proof/token; minh chứng và script tái chạy ở `D:\Codex\outputs\unilost\a5\`.
