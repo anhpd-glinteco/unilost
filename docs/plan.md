@@ -45,10 +45,13 @@ A4 có thể làm phần đặc tả sau A0 nhưng chỉ cập nhật hợp đ�
 
 ### Quy tắc claim đã chọn
 
+Nguồn đặc tả chi tiết từ A4: [hợp đồng claim, ma trận quyền và nghiệm thu](../features/claims/README.md). Đây là thiết kế mục tiêu; quyền ghi claim hiện vẫn bị khóa ở A2.
+
 - Server lấy danh tính từ Supabase Auth đã xác thực; không nhận requester/role/chủ tin từ client. Header ChatGPT không thay thế danh tính Supabase.
-- Chỉ claim tin found đã published, chưa xóa, còn mở (searching/matched); không tự claim. Proof 10–1.000 ký tự theo schema hiện có.
+- Chỉ claim tin found đã published, chưa xóa, còn mở (searching/matched); không tự claim. Proof được trim đầu/cuối trước khi kiểm tra 10–1.000 ký tự và lưu giá trị đã parse.
 - Mỗi cặp tin/người gửi có một claim trong MVP; chưa gửi lại sau hủy/từ chối.
 - Pending → accepted/rejected: chủ tin; pending → cancelled: người gửi. Admin đọc để kiểm duyệt, không quyết định thay chủ tin.
+- Hủy/từ chối pending không yêu cầu tin còn công khai hoặc còn mở; không tự động đổi trạng thái claim khác.
 - Accepted đưa tin sang verifying; claim khác giữ pending nhưng không thể accepted tiếp. Hoàn trả/completed thuộc C1.
 - DB bảo đảm tối đa một claim accepted/completed trên một tin; giao dịch khóa tin khi quyết định. Ghi trực tiếp không được vượt quy trình.
 - Proof chỉ người gửi, chủ tin và admin được đọc; không đưa vào payload công khai, log hoặc minh chứng chứa dữ liệu thật.
