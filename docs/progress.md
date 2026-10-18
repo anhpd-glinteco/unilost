@@ -187,7 +187,7 @@ Kế hoạch: [plan.md](plan.md). Hiện trạng: [baseline.md](baseline.md). B�
 
 ### A3b — chi tiết tin thật — 18/10/2026
 
-- Triển khai local trên nhánh hiện có `codex/unilost-a3a-create-found`, base `474aa42`; chưa commit/push/PR, merge hoặc deploy. Hai tệp báo cáo có thay đổi từ phiên trước được giữ nguyên.
+- Mã A3b ở commit `ec94339`, nhánh `codex/unilost-a3b-post-detail`, push lên origin; [PR #50](https://github.com/anhpd-glinteco/unilost/pull/50) mở vào `codex/unilost-a3a-create-found` (PR #48). Chưa merge/deploy; CI web đang chạy lúc cập nhật checkpoint. Hai tệp báo cáo có thay đổi từ phiên trước được giữ nguyên.
 - `features/posts/queries.ts` đọc bằng Supabase client theo cookie và RLS; UUID sai không truy vấn, không có hàng/không có quyền/tin đã xóa trả 404. Chỉ chọn trường hiển thị, kiểm tra dữ liệu trả về; không query profile/chủ tin/proof, không dùng service key hoặc cache dùng chung.
 - Trang chi tiết động bỏ static params, fallback demo và matching giả. Khách/người lạ xem published; chủ tin/admin xem thêm pending/hidden, có nhãn kiểm duyệt. Tin xóa luôn 404 trên trang dù RLS vẫn cho owner/admin đọc hàng gốc. Thiếu cấu hình/lỗi DB/mạng hiển thị lỗi an toàn và link thử lại. Chưa có ảnh, claim tiếp tục khóa; feed demo vẫn giữ nguyên nên ID demo mở chi tiết trả 404.
 - Kiểm chứng mã hiện tại: **151/151 unit test**, typecheck, lint, build PASS. Thêm 17 kiểm tra query và 2 kiểm tra render lỗi/404. Khi máy thiếu bộ nhớ, chạy Vitest tuần tự bằng `node --max-old-space-size=512 node_modules/vitest/vitest.mjs run --maxWorkers=1 --no-file-parallelism`; typecheck/lint chạy tuần tự với heap 512 MB đạt.
