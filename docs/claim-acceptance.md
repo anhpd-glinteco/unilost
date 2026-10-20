@@ -41,4 +41,3 @@ Kết quả mới ngày 20/10: **307/307 unit**, typecheck/lint/build, **558 hos
 Kết quả thực chạy và giới hạn được ghi tại checkpoint A9b trong [progress](progress.md) và `verification.md` ngoài Git. Chỉ ghi PASS sau exit 0 cùng cleanup; giữ lại lỗi harness nếu có và giải thích lượt chạy lại. Manifest liên kết hash mã nguồn, script và artifact; CI phải gắn đúng commit PR.
 
 Review độc lập còn thiếu: người khác cần rà soát PR và bộ minh chứng; tự rà soát của tác giả không thay thế review độc lập. Không sửa Sheet. #25/#27/#28 giữ OPEN khi chưa đủ toàn bộ nghiệm thu, gồm tổng hợp Tuần 6 dòng 15. #26 đã CLOSED từ A5; A9b bổ sung kết quả hồi quy, không mở lại hoặc nhận là đóng mới. Production HTTPS/cookie Secure, fresh email PKCE và C1 chưa kiểm chứng.
-
