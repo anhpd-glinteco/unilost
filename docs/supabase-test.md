@@ -1,5 +1,13 @@
 # Môi trường Supabase test A2
 
+## B1a — tạo lost (20/10/2026)
+
+- Project test vẫn là `unilost-a2-test`, ref `lsaukzzmwbsztnlcrdpk`; không áp dụng production. Preflight đọc policy INSERT, grants theo cột và số tin trước migration: hai policy chỉ cho found, tám cột INSERT của authenticated, 11 tin và không có lost.
+- Chạy migration `0007_b1a_create_lost_posts.sql` với rollback trước; xác nhận hai policy gốc vẫn tồn tại, rồi áp dụng nguyên migration một lần. Không giả lập migration history CLI. Không chạy lại nếu policy đã chuyển sang `users create own posts` / `post insert guard`.
+- Chạy năm suite SQL như A7; `a3a_create_found.sql` hiện yêu cầu 0007 và bổ sung lost hợp lệ thay cho assertion cũ cấm lost. Fixture tự rollback; tổng tin sau SQL vẫn là 11.
+- Replay REST: `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env scripts/test-permissions.mjs`. Runner giữ hồi quy claim/Storage và kiểm tra cả lost/found theo actor; credential ở ngoài Git. Kết quả và giới hạn xem checkpoint B1a trong progress và `D:/Codex/outputs/unilost/b1a/`.
+- UI lost, sửa/đóng tin, ảnh, browser lost, email PKCE mới và production chưa thuộc phiên này.
+
 ## Trạng thái
 
 Project test `unilost-a2-test` đã được tạo, ref `lsaukzzmwbsztnlcrdpk`, gói Free, vùng Tokyo theo cấu hình người dùng. Đã bootstrap 0001 và khóa quyền 0002 qua SQL Editor trên DB trống, kiểm tra và căn lại đầy đủ FK cascade theo nguồn gốc. Đây là áp dụng SQL thủ công, có snippet/checkpoint; chưa dùng CLI để tạo `supabase_migrations.schema_migrations` và không giả lập lịch sử CLI.
