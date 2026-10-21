@@ -1,5 +1,11 @@
 # Môi trường Supabase test A2
 
+## B1c — sửa/đóng tin (21/10/2026)
+
+- Migration `0008_b1c_edit_close_posts.sql` đã áp dụng trên đúng `unilost-a2-test` (`lsaukzzmwbsztnlcrdpk`) qua SQL Editor, sau preflight và lượt rollback. Hai RPC trước đó chưa tồn tại; sau rollback vẫn chưa tồn tại, số hàng posts/profiles/claim_requests/status_history giữ 11/7/13/2. Không chạy lại migration đã áp dụng hoặc tự ghi migration history CLI.
+- Sáu suite `a2_permissions.sql`, `a2_rls.sql`, `a3a_create_found.sql`, `a6_claims.sql`, `a7_claim_decisions.sql`, `b1c_posts.sql` hosted PASS. Fixture và DDL thử lỗi nằm trong transaction rollback; direct UPDATE vẫn khóa, RPC chỉ cho authenticated EXECUTE.
+- Replay REST dùng lệnh B1a bên dưới, nay bao gồm B1c. Kết quả cuối và giới hạn tại checkpoint B1c trong `docs/progress.md`; bằng chứng ngoài Git tại `D:/Codex/outputs/unilost/b1c/hosted/`. Không suy rộng sang production, UI hoặc browser sửa/đóng tin.
+
 ## B1a — tạo lost (20/10/2026)
 
 - Project test vẫn là `unilost-a2-test`, ref `lsaukzzmwbsztnlcrdpk`; không áp dụng production. Preflight đọc policy INSERT, grants theo cột và số tin trước migration: hai policy chỉ cho found, tám cột INSERT của authenticated, 11 tin và không có lost.

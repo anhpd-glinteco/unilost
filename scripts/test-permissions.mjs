@@ -171,7 +171,7 @@ export async function runPermissionTests(env = process.env) {
     stage = "A6 create/cancel RPC";
     const rpc = async (actor, name, payload) => {
       const result = await request(actor?.token || "", `rpc/${name}`, "POST", payload);
-      if (result.response.ok && typeof result.body === "string" && !ids.claim_requests.includes(result.body)) {
+      if (name.endsWith("_claim") && result.response.ok && typeof result.body === "string" && !ids.claim_requests.includes(result.body)) {
         ids.claim_requests.push(result.body);
       }
       return result;
@@ -405,6 +405,71 @@ export async function runPermissionTests(env = process.env) {
       denyRpc(await rpc(member, name, { p_claim_id: adminClaim.id, owner_id: member.id }), "PGRST202");
     }
     console.log("A7 PASS: owner decisions, atomic effects, recovery projection, unique recipients and three race variants.");
+    stage = "B1c edit/close posts";
+    const editContent = { title: "Edited fixture wallet", category: "other", color: "black", description: "Disposable B1c edited description", location: "Library", occurredAt: "2024-02-29" };
+    for (const type of ["lost", "found"]) for (const moderation of ["published", "pending", "hidden"]) for (const status of ["searching", "matched", "verifying", "returned", "closed", "deleted"]) {
+      const post = await newPost({ type, moderation, status: status === "deleted" ? "searching" : status, deleted_at: status === "deleted" ? new Date().toISOString() : null });
+      const claim = await seedClaim(post, outsider);
+      const before = await decisionState(post);
+      for (const actor of [null, stranger, admin, outsider]) {
+        denyRpc(await rpc(actor, "update_post", { p_post_id: post.id, p_content: editContent }), "42501");
+        denyRpc(await rpc(actor, "close_post", { p_post_id: post.id }), "42501");
+      }
+      if (["searching", "matched"].includes(status)) {
+        assert.equal((await rpc(member, "update_post", { p_post_id: post.id, p_content: { ...editContent, title: `  ${editContent.title}  ` } })).body, post.id);
+        const edited = await decisionState(post);
+        assert.deepEqual(edited.post, { ...before.post, title: editContent.title, category: editContent.category, color: editContent.color, description: editContent.description, location: editContent.location, occurred_at: editContent.occurredAt, moderation: moderation === "published" ? "pending" : moderation, updated_at: edited.post.updated_at });
+        assert.deepEqual(edited.claims, before.claims); assert.deepEqual(edited.history, before.history); checks++;
+        for (const bad of [null, [], { ...editContent, title: 1234 }, { ...editContent, title: {} }, { ...editContent, title: " " }, { ...editContent, title: "😀".repeat(51) }, { ...editContent, occurredAt: "2026-02-29" }, { ...editContent, owner_id: stranger.id }, { ...editContent, type: "lost" }, { ...editContent, moderation: "published" }]) {
+          denyRpc(await rpc(member, "update_post", { p_post_id: post.id, p_content: bad }), "22023");
+        }
+        assert.equal((await rpc(member, "close_post", { p_post_id: post.id })).body, post.id);
+        const closed = await decisionState(post);
+        assert.equal(closed.post.status, "closed"); assert.equal(closed.post.moderation, edited.post.moderation);
+        assert.deepEqual(closed.claims, before.claims); assert.equal(closed.claims[0].id, claim.id);
+        assert.equal(closed.history.length, 1); assert.equal(closed.history[0].actor_id, member.id);
+        assert.equal(closed.history[0].from_status, status); assert.equal(closed.history[0].to_status, "closed");
+        assert.equal((await rpc(member, "close_post", { p_post_id: post.id })).body, post.id);
+        assert.deepEqual(await decisionState(post), closed); checks++;
+      } else {
+        denyRpc(await rpc(member, "update_post", { p_post_id: post.id, p_content: editContent }), "42501");
+        if (status === "closed") assert.equal((await rpc(member, "close_post", { p_post_id: post.id })).body, post.id);
+        else denyRpc(await rpc(member, "close_post", { p_post_id: post.id }), "42501");
+        assert.deepEqual(await decisionState(post), before); checks++;
+      }
+    }
+    const b1cAdminPost = await newPost({ owner_id: admin.id });
+    assert.equal((await rpc(admin, "update_post", { p_post_id: b1cAdminPost.id, p_content: editContent })).body, b1cAdminPost.id);
+    assert.equal((await rpc(admin, "close_post", { p_post_id: b1cAdminPost.id })).body, b1cAdminPost.id); checks += 2;
+    for (const operation of ["update_post", "close_post"]) {
+      for (const id of [randomUUID(), "invalid"]) {
+        const payload = { p_post_id: id, ...(operation === "update_post" ? { p_content: editContent } : {}) };
+        denyRpc(await rpc(member, operation, payload), id === "invalid" ? "22P02" : "42501");
+      }
+      const payload = { p_post_id: b1cAdminPost.id, ...(operation === "update_post" ? { p_content: editContent } : {}), owner_id: member.id };
+      denyRpc(await rpc(member, operation, payload), "PGRST202");
+    }
+    for (const operation of ["update_post", "close_post"]) for (let attempt = 0; attempt < 3; attempt++) {
+      const post = await newPost(); const claim = await seedClaim(post, outsider);
+      const results = await Promise.all([
+        rpc(member, "accept_claim", { p_claim_id: claim.id }),
+        rpc(member, operation, { p_post_id: post.id, ...(operation === "update_post" ? { p_content: editContent } : {}) }),
+      ]);
+      assert.equal(results.filter((result) => result.response.ok).length, 1);
+      const after = await decisionState(post);
+      if (results[0].response.ok) {
+        assert.equal(after.post.status, "verifying"); assert.equal(after.claims[0].status, "accepted");
+        assert.equal(after.post.title, post.title); assert.equal(after.history.length, 1);
+      } else {
+        assert.equal(after.claims[0].status, "pending");
+        assert.equal(after.post.status, operation === "close_post" ? "closed" : "searching");
+        assert.equal(after.post.moderation, operation === "update_post" ? "pending" : "published");
+        assert.equal(after.history.length, operation === "close_post" ? 1 : 0);
+      }
+      checks++;
+    }
+    console.log("B1c PASS: edit/close role and state matrix, strict JSON, repeated close, preserved claims and accept races.");
+
     for (const actor of actors) {
       console.log(`Checking ${actor.name}: profile, REST and Storage permissions...`);
       stage = `${actor.name}: read and profile checks`;
