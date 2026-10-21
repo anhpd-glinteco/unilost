@@ -11,6 +11,13 @@
 - `fixtures/claim-proofs.json`: 12 vector Unicode/độ dài/trim dùng chung unit và runner DB. `supabase/tests/a6_claims.sql`: quyền EXECUTE, khóa ghi trực tiếp, danh tính, tạo/hủy và chống lặp; fixture rollback.
 - Runner `npm run test:db` hiện cần migration 0004–0005, giữ A5 và kiểm tra RPC/quyền/trạng thái/cạnh tranh trên Supabase test. Thiết lập, cleanup failure injection và minh chứng: [hướng dẫn Supabase test](../docs/supabase-test.md).
 
+## B1e: Storage/API ảnh riêng tư
+
+- [Hợp đồng HTTP/quyền/cleanup](../features/posts/IMAGES.md): một ảnh mỗi tin, JPEG/PNG/WebP tối đa 5 MiB; chỉ server truy cập Storage, RPC service-only sau kiểm tra Auth, so sánh ảnh hiện tại và khóa tin.
+- `unit/post-image.test.ts`: chữ ký/MIME/biên/chunked body, quyền/CSRF/trạng thái, upload/DB/cleanup/readback lỗi hoặc mất phản hồi, không retry/không thành công giả, GET private và thu hồi quyền trong lúc download.
+- `supabase/tests/b1e_images.sql`: ma trận type/moderation/status, CAS, rollback ảnh+tin, index và grants. Chạy cùng sáu suite trước trên project test; toàn fixture/DDL rollback.
+- `npm run test:images`: cần SUPABASE_TEST_* và B1E_TEST_APP_ORIGIN loopback, app chạy với cùng project test và server secret ngoài Git. Kiểm tra HTTP thật, direct Storage/sign/RPC denial, public URL, race API và cleanup/readback. Không thay browser UI hoặc production proof.
+
 ## A2: quyền DB và sửa hồ sơ
 
 - Thiết lập project test, migration và lệnh chạy: [docs/supabase-test.md](../docs/supabase-test.md).
