@@ -71,4 +71,3 @@ begin
   end loop;
 end $$;
 rollback;
-

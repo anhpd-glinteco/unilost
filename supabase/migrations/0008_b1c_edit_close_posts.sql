@@ -73,4 +73,3 @@ $$;
 revoke all on function public.update_post(uuid,jsonb), public.close_post(uuid) from public, anon, authenticated;
 grant execute on function public.update_post(uuid,jsonb), public.close_post(uuid) to authenticated;
 commit;
-
