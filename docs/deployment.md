@@ -8,7 +8,7 @@
 
 ### Auth A1a — local và callback
 
-- Copy `.env.example` thành `.env.local`, điền URL project test và anon key; không đưa service-role key vào ứng dụng. Hai biến `NEXT_PUBLIC_*` phải có lúc build để client bundle nhận đúng cấu hình, đồng thời có ở môi trường server/Worker. Khởi động lại dev server sau khi đổi env.
+- Copy `.env.example` thành `.env.local`, điền URL project test và anon key. B1e yêu cầu thêm `SUPABASE_SERVICE_ROLE_KEY` **chỉ ở server** cho API ảnh sau migration 0009; không đưa vào client hoặc biến `NEXT_PUBLIC_*`. Hai biến `NEXT_PUBLIC_*` phải có lúc build để client bundle nhận đúng cấu hình, đồng thời có ở môi trường server/Worker. Khởi động lại dev server sau khi đổi env.
 - Local mặc định: `http://localhost:5173`. Thêm callback `http://localhost:5173/auth/callback` vào Auth → URL Configuration; cho phép các query `next` ứng dụng sử dụng theo [hướng dẫn redirect của Supabase](https://supabase.com/docs/guides/auth/redirect-urls). Với origin local khác production, có thể dùng mẫu giới hạn `http://localhost:5173/auth/callback**`; production dùng domain HTTPS thực và đường dẫn callback cụ thể.
 - Giữ email template dùng `{{ .ConfirmationURL }}` để Supabase xác minh link rồi trả `code` về `/auth/callback`. Đây là PKCE code exchange, không phải callback nhận `token_hash` hoặc access token trong fragment.
 - Mở link bằng cùng trình duyệt/profile đã yêu cầu đăng nhập: PKCE verifier nằm trong cookie. Trình duyệt khác, link hết hạn hoặc đã dùng phải yêu cầu link mới. Việc tạo tài khoản email mới vẫn theo cấu hình Supabase `signInWithOtp` mặc định; UI đăng ký/profile thuộc A1b.
