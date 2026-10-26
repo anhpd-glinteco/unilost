@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createFoundPost, createLostPost, type CreatePostState } from "./actions";
 import { categories } from "@/lib/mock-data";
+import { PostImage } from "./post-image";
 
 type PostType = "found" | "lost";
 type PostFields = { title: string; category: string; color: string; description: string; location: string; occurredAt: string };
@@ -30,7 +31,7 @@ function PostForm({ type, onTypeChange, fields, setFields, onNew }: {
   const inputClass = "w-full min-w-0 rounded-xl border border-[#dfe9e2] px-4 py-3";
   const found = type === "found";
   return <form action={action} aria-busy={pending} className="mt-8 min-w-0 space-y-5 rounded-2xl border border-[#dfe9e2] bg-white p-6 md:p-8">
-    <p className="text-sm text-[#5f746d]">Tin {found ? "nhặt được" : "thất lạc"} sẽ chờ duyệt trước khi xuất hiện công khai. Chưa hỗ trợ tải ảnh.</p>
+    <p className="text-sm text-[#5f746d]">Tin {found ? "nhặt được" : "thất lạc"} sẽ chờ duyệt trước khi xuất hiện công khai.</p>
     <fieldset disabled={pending || !!state.postId} className="min-w-0 space-y-5 disabled:opacity-60">
       <div><label htmlFor="postType" className="mb-2 block text-sm font-semibold">Loại tin</label>
         <select id="postType" value={type} onChange={(event) => onTypeChange(event.target.value as PostType)} className={inputClass}>
@@ -53,6 +54,6 @@ function PostForm({ type, onTypeChange, fields, setFields, onNew }: {
       <button className="w-full rounded-full bg-[#1c5546] px-5 py-3 font-bold text-white hover:bg-[#143f34]">{pending ? "Đang gửi…" : `Đăng tin ${found ? "nhặt được" : "thất lạc"} đồ`}</button>
     </fieldset>
     {!pending && state.error && <p role="alert" className="text-sm text-[#b65e2b]">{state.error}</p>}
-    {state.postId && <div role="status" className="space-y-3 text-sm text-[#28725c]"><p>Đã tạo tin {found ? "nhặt được" : "thất lạc"}, đang chờ duyệt.</p><p className="break-all">Mã tin: {state.postId}</p><button type="button" onClick={onNew} className="rounded-full border border-[#28725c] px-4 py-2 font-semibold">Tạo tin khác</button></div>}
+    {state.postId && <div className="space-y-3 text-sm text-[#28725c]"><p role="status">Đã tạo tin {found ? "nhặt được" : "thất lạc"}, đang chờ duyệt.</p><PostImage key={state.postId} postId={state.postId} manageable /><p className="break-all">Mã tin: {state.postId}</p><button type="button" onClick={onNew} className="rounded-full border border-[#28725c] px-4 py-2 font-semibold">Tạo tin khác</button></div>}
   </form>;
 }
