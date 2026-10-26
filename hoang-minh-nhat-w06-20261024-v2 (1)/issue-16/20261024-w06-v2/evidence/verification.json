@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-24",
+  "producerAgentId": "/root",
+  "base": "e03017416bb5adbc3fb764df037bfd5e0eddd2d8",
+  "sourceFingerprint": "3bfdb6071ef171dc4348080c32b56cf9d296bbc874f03582aaf5eafedb9f6a3c",
+  "sources": {
+    "app/posts/[id]/page.tsx": "0cebaf193920ffec16702003ef56cb11f186041bedc00621f6af508716d3d09b",
+    "features/posts/create-post-form.tsx": "14be8826799cf58122e770e2324bfea657e7ae68a2218552ea5b205eb4f94e9e",
+    "features/posts/post-image.tsx": "404fe35109e0dcb6d4c2ae48e84c41558def294e293ff48b49a4c9c77ef27719",
+    "features/posts/IMAGES.md": "8cee9ae53ff9c5fe5781376d275c561ae215e3fd438c01d0253dacc0e7ffb07e",
+    "tests/unit/post-detail-page.test.tsx": "fe216b7f57b713146ee7a3555badb25ee1d5cf7633223103ebd0adc8753e7021",
+    "tests/unit/post-image-ui.test.tsx": "76183aa2114d447f87f3716ade6d4a82b62e1d1c643b795c337085a41a9841ca",
+    "tests/unit/post-image-ui-fixture.test.ts": "5b1192da3d5c081ec6e964a52affc3f201755fccc54620e0fa534fd51d92520b",
+    "scripts/post-image-ui-fixture.mjs": "88b1cbc41c8dffa88e06df4ab0d21f9494cd706616078d84d94bd441e11e32fa",
+    "tests/e2e/post-image-ui.md": "beeecf9115158906be0a21436f74b7f63e0115f70a3ece252671452cef4e17e2",
+    "tests/README.md": "6ce8619200276b15a6f3e0bf5eaf7fa4a5a8e5811cb91a7f189537d259771d64",
+    "tests/fixtures/post-images/blue.png": "250a241ebc6163919f98f5a67e379aa9d18a6c4d01e18cac1aa4316b8a86e2a9",
+    "tests/fixtures/post-images/red.png": "effd8f02fbfc3444e2760335070d9e2997419349b6e697c3b5ea40fee7940854",
+    "tests/fixtures/post-images/valid.jpg": "5755d3e6b41c46c65bca836f7c66d2346ad76b784da7dfa62dc13bd0d1317924",
+    "tests/fixtures/post-images/valid.webp": "4f817605e0a6190273904ea9a045d27fae90030967fdf8eacc1d61af86a7fe1e"
+  },
+  "criteria": {
+    "C1": "PASS",
+    "C2": "PASS",
+    "C3": "PASS",
+    "C4": "PASS for recorded scenarios; transport exactly-once not established",
+    "C5": "PASS",
+    "C6": "PASS"
+  },
+  "unit": 389,
+  "browserAssertions": 43,
+  "independentReview": "BLOCKED",
+  "newCI": "NOT_RUN",
+  "production": "NOT_RUN"
+}

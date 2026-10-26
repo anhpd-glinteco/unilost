@@ -1,0 +1,506 @@
+[
+  {
+    "baseRefName": "codex/unilost-a4-claim-contract",
+    "baseRefOid": "dfccd63735ab6ef5177d7de987656675d6114f74",
+    "files": [
+      {
+        "path": "docs/progress.md",
+        "additions": 12,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/supabase-test.md",
+        "additions": 11,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 8,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "scripts/test-permissions.mjs",
+        "additions": 57,
+        "deletions": 4,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefName": "codex/unilost-a5-proof-read",
+    "headRefOid": "98bf41a78724f9b3ab0c157cb9cfe7588ca55766",
+    "number": 52,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T05:28:12Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39100597349/job/117595894947",
+        "name": "web",
+        "startedAt": "2026-10-18T05:27:18Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "test: verify claim proof read permissions",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/52"
+  },
+  {
+    "baseRefName": "codex/unilost-a5-proof-read",
+    "baseRefOid": "98bf41a78724f9b3ab0c157cb9cfe7588ca55766",
+    "files": [
+      {
+        "path": "docs/plan.md",
+        "additions": 1,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/progress.md",
+        "additions": 12,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/supabase-test.md",
+        "additions": 12,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 12,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/actions.ts",
+        "additions": 48,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "scripts/test-permissions.mjs",
+        "additions": 119,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "supabase/migrations/0004_a6_create_cancel_claims.sql",
+        "additions": 57,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "supabase/migrations/0005_a6_claim_proof_json_type.sql",
+        "additions": 45,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "supabase/tests/a6_claims.sql",
+        "additions": 68,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/README.md",
+        "additions": 6,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/fixtures/claim-proofs.json",
+        "additions": 14,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/unit/claim-actions.test.ts",
+        "additions": 100,
+        "deletions": 0,
+        "changeType": "ADDED"
+      }
+    ],
+    "headRefName": "codex/unilost-a6-create-cancel-claims",
+    "headRefOid": "e9c9609925de1d8ed755147b39354753ca518474",
+    "number": 53,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T07:38:16Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39108365899/job/117618999513",
+        "name": "web",
+        "startedAt": "2026-10-18T07:37:32Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "feat: add claim creation and cancellation",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/53"
+  },
+  {
+    "baseRefName": "codex/unilost-a6-create-cancel-claims",
+    "baseRefOid": "e9c9609925de1d8ed755147b39354753ca518474",
+    "files": [
+      {
+        "path": "docs/plan.md",
+        "additions": 1,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/progress.md",
+        "additions": 12,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/supabase-test.md",
+        "additions": 13,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 12,
+        "deletions": 3,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/actions.ts",
+        "additions": 26,
+        "deletions": 13,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "scripts/test-permissions.mjs",
+        "additions": 123,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "supabase/migrations/0006_a7_decide_claims.sql",
+        "additions": 64,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "supabase/tests/a7_claim_decisions.sql",
+        "additions": 125,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/README.md",
+        "additions": 6,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/unit/claim-actions.test.ts",
+        "additions": 39,
+        "deletions": 2,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefName": "codex/unilost-a7-decide-claims",
+    "headRefOid": "204e5663d948eda7724205e8e68e271f14d44d0f",
+    "number": 54,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T08:21:27Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39111066992/job/117627128916",
+        "name": "web",
+        "startedAt": "2026-10-18T08:20:33Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "feat: add atomic claim decisions",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/54"
+  },
+  {
+    "baseRefName": "codex/unilost-a7-decide-claims",
+    "baseRefOid": "204e5663d948eda7724205e8e68e271f14d44d0f",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "additions": 5,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "app/posts/[id]/page.tsx",
+        "additions": 2,
+        "deletions": 1,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/progress.md",
+        "additions": 11,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 7,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/claim-section.tsx",
+        "additions": 17,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "features/claims/claim-status.ts",
+        "additions": 5,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "features/claims/create-claim-form.tsx",
+        "additions": 38,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "features/claims/queries.ts",
+        "additions": 33,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/README.md",
+        "additions": 7,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/unit/claim-form-context.test.ts",
+        "additions": 54,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/unit/claim-section.test.tsx",
+        "additions": 18,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/unit/post-detail-page.test.tsx",
+        "additions": 9,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefName": "codex/unilost-a8a-claim-form",
+    "headRefOid": "1a8a40d81c169f0b91de652c82239f99938ae738",
+    "number": 55,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T16:41:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39146058095/job/117730018095",
+        "name": "web",
+        "startedAt": "2026-10-18T16:40:18Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "feat: add claim submission form",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/55"
+  },
+  {
+    "baseRefName": "codex/unilost-a8a-claim-form",
+    "baseRefOid": "1a8a40d81c169f0b91de652c82239f99938ae738",
+    "files": [
+      {
+        "path": "app/dashboard/claims/page.tsx",
+        "additions": 29,
+        "deletions": 4,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/progress.md",
+        "additions": 13,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 8,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/claim-list.tsx",
+        "additions": 41,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "features/claims/queries.ts",
+        "additions": 36,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/README.md",
+        "additions": 7,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/unit/claim-list-query.test.ts",
+        "additions": 67,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "tests/unit/claim-list.test.tsx",
+        "additions": 64,
+        "deletions": 0,
+        "changeType": "ADDED"
+      }
+    ],
+    "headRefName": "codex/unilost-a8b-claim-lists",
+    "headRefOid": "a5d62b88b03cb8c2fa10a8d173e4a0c7cffe755d",
+    "number": 56,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T17:07:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39148089687/job/117735950388",
+        "name": "web",
+        "startedAt": "2026-10-18T17:07:04Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "feat: show private sent and received claim lists (A8b)",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/56"
+  },
+  {
+    "baseRefName": "codex/unilost-a8b-claim-lists",
+    "baseRefOid": "a5d62b88b03cb8c2fa10a8d173e4a0c7cffe755d",
+    "files": [
+      {
+        "path": "docs/progress.md",
+        "additions": 13,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/README.md",
+        "additions": 9,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/claim-decisions.tsx",
+        "additions": 73,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "features/claims/claim-list.tsx",
+        "additions": 2,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "features/claims/queries.ts",
+        "additions": 2,
+        "deletions": 2,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/unit/claim-list-query.test.ts",
+        "additions": 7,
+        "deletions": 2,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "tests/unit/claim-list.test.tsx",
+        "additions": 33,
+        "deletions": 2,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefName": "codex/unilost-a9a-claim-decisions",
+    "headRefOid": "0f582d08fdbb3fb40405dcb7e9b07f6a0781d5d3",
+    "number": 57,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T17:51:55Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39151458314/job/117745785588",
+        "name": "web",
+        "startedAt": "2026-10-18T17:51:02Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "feat: add confirmed claim decisions (A9a)",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/57"
+  },
+  {
+    "baseRefName": "codex/unilost-a9a-claim-decisions",
+    "baseRefOid": "0f582d08fdbb3fb40405dcb7e9b07f6a0781d5d3",
+    "files": [
+      {
+        "path": "docs/claim-acceptance.md",
+        "additions": 43,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "docs/progress.md",
+        "additions": 11,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      },
+      {
+        "path": "docs/test-plan.md",
+        "additions": 2,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefName": "test/unilost-a9b-claim-acceptance",
+    "headRefOid": "233c7edb61518129c1f4c84900874e34b8088664",
+    "number": 58,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-20T06:30:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/anhpd-glinteco/unilost/actions/runs/39380652043/job/118488770263",
+        "name": "web",
+        "startedAt": "2026-10-20T06:29:29Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "test: verify A9b claim flows and Week 6 evidence",
+    "url": "https://github.com/anhpd-glinteco/unilost/pull/58"
+  }
+]

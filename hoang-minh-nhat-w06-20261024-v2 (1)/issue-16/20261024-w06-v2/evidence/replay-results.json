@@ -1,0 +1,18 @@
+[
+  {
+    "exitCode": 0,
+    "gate": "test"
+  },
+  {
+    "exitCode": 0,
+    "gate": "typecheck"
+  },
+  {
+    "exitCode": 0,
+    "gate": "lint"
+  },
+  {
+    "exitCode": 0,
+    "gate": "build"
+  }
+]

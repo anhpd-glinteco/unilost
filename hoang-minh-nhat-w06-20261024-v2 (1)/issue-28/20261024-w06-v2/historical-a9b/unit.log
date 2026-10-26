@@ -1,0 +1,28 @@
+
+ RUN  v3.2.7 D:/unilost/unilost
+
+ ✓ tests/unit/claim-list.test.tsx (29 tests) 42ms
+ ✓ tests/unit/auth-cookies.test.ts (3 tests) 14ms
+ ✓ tests/unit/claim-actions.test.ts (51 tests) 12ms
+ ✓ tests/unit/permission-runner.test.ts (8 tests) 11ms
+ ✓ tests/unit/post-detail-page.test.tsx (3 tests) 9ms
+ ✓ lib/auth/login.test.ts (13 tests) 7ms
+ ✓ tests/unit/claim-list-query.test.ts (34 tests) 8ms
+ ✓ tests/unit/profile-update.test.ts (23 tests) 9ms
+ ✓ tests/unit/claim-section.test.tsx (5 tests) 8ms
+ ✓ tests/unit/auth-account.test.ts (13 tests) 7ms
+ ✓ tests/unit/create-found-post.test.ts (25 tests) 8ms
+ ✓ tests/unit/auth-routes.test.ts (11 tests) 8ms
+ ✓ tests/unit/claim-form-context.test.ts (24 tests) 7ms
+ ✓ tests/unit/auth-proxy.test.ts (3 tests) 6ms
+ ✓ tests/unit/read-post.test.ts (17 tests) 8ms
+ ✓ lib/validation.test.ts (14 tests) 5ms
+ ✓ tests/unit/auth-server.test.ts (6 tests) 4ms
+ ✓ lib/auth/return-path.test.ts (23 tests) 3ms
+ ✓ lib/matching.test.ts (2 tests) 3ms
+
+ Test Files  19 passed (19)
+      Tests  307 passed (307)
+   Start at  13:19:16
+   Duration  11.40s (transform 327ms, setup 0ms, collect 6.25s, tests 179ms, environment 2ms, prepare 1.36s)
+

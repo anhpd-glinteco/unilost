@@ -1,0 +1,37 @@
+
+ RUN  v3.2.7 D:/Codex/work/unilost/w06-v2/replay
+
+ ✓ tests/unit/post-image-ui-fixture.test.ts (3 tests) 918ms
+   ✓ fixture bridge rejects wrong project before creating files or contacting Auth  309ms
+   ✓ fixture bridge rejects remote app before creating files or contacting Auth  302ms
+   ✓ fixture bridge rejects invalid port before creating files or contacting Auth  304ms
+ ✓ tests/unit/claim-list.test.tsx (29 tests) 138ms
+ ✓ tests/unit/post-image.test.ts (20 tests) 75ms
+ ✓ tests/unit/post-detail-page.test.tsx (12 tests) 61ms
+ ✓ tests/unit/post-management.test.tsx (5 tests) 46ms
+ ✓ tests/unit/claim-actions.test.ts (51 tests) 44ms
+ ✓ tests/unit/auth-cookies.test.ts (3 tests) 41ms
+ ✓ tests/unit/post-image-ui.test.tsx (2 tests) 41ms
+ ✓ tests/unit/permission-runner.test.ts (8 tests) 43ms
+ ✓ tests/unit/create-found-post.test.ts (41 tests) 34ms
+ ✓ tests/unit/profile-update.test.ts (23 tests) 29ms
+ ✓ tests/unit/claim-section.test.tsx (5 tests) 28ms
+ ✓ tests/unit/post-mutations.test.ts (15 tests) 28ms
+ ✓ tests/unit/claim-list-query.test.ts (34 tests) 32ms
+ ✓ lib/auth/login.test.ts (13 tests) 24ms
+ ✓ tests/unit/auth-account.test.ts (13 tests) 25ms
+ ✓ tests/unit/auth-routes.test.ts (11 tests) 25ms
+ ✓ tests/unit/read-post.test.ts (17 tests) 23ms
+ ✓ tests/unit/auth-proxy.test.ts (3 tests) 20ms
+ ✓ tests/unit/claim-form-context.test.ts (24 tests) 22ms
+ ✓ tests/unit/post-management-query.test.ts (12 tests) 15ms
+ ✓ tests/unit/auth-server.test.ts (6 tests) 15ms
+ ✓ lib/validation.test.ts (14 tests) 14ms
+ ✓ lib/auth/return-path.test.ts (23 tests) 9ms
+ ✓ lib/matching.test.ts (2 tests) 7ms
+
+ Test Files  25 passed (25)
+      Tests  389 passed (389)
+   Start at  15:16:56
+   Duration  18.41s (transform 912ms, setup 0ms, collect 5.07s, tests 1.76s, environment 9ms, prepare 3.91s)
+

@@ -1,0 +1,248 @@
+{
+  "date": "2026-10-20",
+  "producer": "/root",
+  "head": "233c7edb61518129c1f4c84900874e34b8088664",
+  "sourceFingerprint": "a1af36473fed386b35aad65679728705f76dbd45713272a9b1c22272ad37f644",
+  "sources": [
+    {
+      "path": "features/claims/README.md",
+      "sha256": "879245c37f957296c86034e2b05837ed2abb7fa729fd883d01bc042ebb999822"
+    },
+    {
+      "path": "features/claims/actions.ts",
+      "sha256": "da210ea09d5dca69d09ee86e72729b2cec299d4ebb0bdb9842b65c7d813b60c6"
+    },
+    {
+      "path": "features/claims/claim-decisions.tsx",
+      "sha256": "6934b297fa59b7fae46929143fd13ffa220b74c1bdd08a03ddf0b6c3fe7f172c"
+    },
+    {
+      "path": "features/claims/claim-list.tsx",
+      "sha256": "36016b7ee29f71925e5cf11015c1c15da0c0ec8d4030ddaa2ce654b7961bd6b9"
+    },
+    {
+      "path": "features/claims/claim-section.tsx",
+      "sha256": "6426d2f4723b731f3bfb7bee1c5aa21fd77f2389962c2abc859d84b3c8b4a5de"
+    },
+    {
+      "path": "features/claims/claim-status.ts",
+      "sha256": "64187d6848358d336de8e318987da93e292bf880afe565bd0798978112ec5c59"
+    },
+    {
+      "path": "features/claims/create-claim-form.tsx",
+      "sha256": "1a06aa1830af9abebe629a59569bc242b22ef86f9c169e14dc9d9cdf03884c7b"
+    },
+    {
+      "path": "features/claims/queries.ts",
+      "sha256": "93a52e1d43effa8fb179ae0205b8a16ae1131da848847243bc088ffefe009d7b"
+    },
+    {
+      "path": "features/posts/README.md",
+      "sha256": "6281f88c59355835e9df51dc22759a2a0f641734485d06ab5b7475122c6ad3d0"
+    },
+    {
+      "path": "features/posts/actions.ts",
+      "sha256": "d31e99e3dc1fbbf9b6d56f1b03b438ed511169ef0b2368c07174ada90a01165a"
+    },
+    {
+      "path": "features/posts/create-post-form.tsx",
+      "sha256": "1958b4bcd997c5625a469d09b74f090480bee831f4676a4d35b067f2a8326835"
+    },
+    {
+      "path": "features/posts/queries.ts",
+      "sha256": "4b1b39a497a8399e9988f5f3aa138dd318e295da627c11d83bdf90ba7e918a18"
+    },
+    {
+      "path": "features/posts/schemas.ts",
+      "sha256": "cb045165d300988245fe413572aba3c0ebd50d1e735ac2e53e32bcbad8f324a4"
+    },
+    {
+      "path": "lib/auth/account.ts",
+      "sha256": "3a93d340ec19b80810ee5deeeb7fbf54963bca64ec8cbe4c10c50258ddd1de35"
+    },
+    {
+      "path": "lib/auth/login.test.ts",
+      "sha256": "be17819e22439021bd9beefd6e2b1e79d9f33fa650f5ddf9ae607d9bfddfac85"
+    },
+    {
+      "path": "lib/auth/login.ts",
+      "sha256": "7b5034a8a907dab0fbd0483c156a64fc5598fa1f610b2de68b77cd680c714b3c"
+    },
+    {
+      "path": "lib/auth/return-path.test.ts",
+      "sha256": "12e437887c9d828c44682af158c8b4b9fbc43e7272323f16afb30570e34f66c9"
+    },
+    {
+      "path": "lib/auth/return-path.ts",
+      "sha256": "2aeef4f1ca6889471d2c983295c6c5c38dbdfe4a7c33fdbdc753d0168ea44cdc"
+    },
+    {
+      "path": "lib/supabase/config.ts",
+      "sha256": "c6599734a5eb9f7c0661128dd6666e5db1c54b781f75cad27bef5944feefd679"
+    },
+    {
+      "path": "lib/supabase/server.ts",
+      "sha256": "4bc18475a8c389f3559e89b9db9ba41fee2fb72cec4e0c69987c7c7000bc6ab3"
+    },
+    {
+      "path": "scripts/test-permissions.mjs",
+      "sha256": "d625c9de34da213baa3d35f60576aa3650b7e9a9be980f00bf3d713652ab5919"
+    },
+    {
+      "path": "supabase/migrations/0001_initial.sql",
+      "sha256": "eb1839f57d32bd0f2afb9877c450706d98044948d8447bcb7e4b28f329be4e35"
+    },
+    {
+      "path": "supabase/migrations/0002_a2_permissions.sql",
+      "sha256": "9a41511482461b776d5955458e2dee947c92a04df9475585e7bd6f6409dbd4cb"
+    },
+    {
+      "path": "supabase/migrations/0003_a3a_create_found_posts.sql",
+      "sha256": "c5228d110a5065635011de4c415850be1aac92dac70d3c51d14e659b311df398"
+    },
+    {
+      "path": "supabase/migrations/0004_a6_create_cancel_claims.sql",
+      "sha256": "d8b4a560cd43e3e7b872531bdc1e2871b3a92853be1602b1f09a130c72bc4182"
+    },
+    {
+      "path": "supabase/migrations/0005_a6_claim_proof_json_type.sql",
+      "sha256": "42055f72e76c5efd59ee8e5e6fb1ce0a4df2d24c7d1d99c29c80823cb6c96ccc"
+    },
+    {
+      "path": "supabase/migrations/0006_a7_decide_claims.sql",
+      "sha256": "924b500c720e15d0c2138d47b1167914bd74c47aed16ce1a258079ed8b998956"
+    },
+    {
+      "path": "tests/README.md",
+      "sha256": "2fa6ab26b9426bbf6b697498bfcf92439665950c787e8082009774c572dd2991"
+    },
+    {
+      "path": "tests/components/.gitkeep",
+      "sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
+    },
+    {
+      "path": "tests/e2e/.gitkeep",
+      "sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
+    },
+    {
+      "path": "tests/fixtures/.gitkeep",
+      "sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
+    },
+    {
+      "path": "tests/fixtures/auth.ts",
+      "sha256": "8227ebc976f6fb3518c2246ce9931d7e22e83ef0aa578d05bffe8773267352e4"
+    },
+    {
+      "path": "tests/fixtures/claim-proofs.json",
+      "sha256": "8e69362f91ab3313e5ed823306fafa5706c3fe646e69a77210768f4570ca6724"
+    },
+    {
+      "path": "tests/unit/.gitkeep",
+      "sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
+    },
+    {
+      "path": "tests/unit/auth-account.test.ts",
+      "sha256": "b0d729cc65740acd500a72502786bec086581eb89dc79eb7920dcd1d46eeb825"
+    },
+    {
+      "path": "tests/unit/auth-cookies.test.ts",
+      "sha256": "26f90fd5ed033b726ae77cce9de5fa79386cae6f185a9196043a8c7e87ed3d8f"
+    },
+    {
+      "path": "tests/unit/auth-proxy.test.ts",
+      "sha256": "e32bd474033a7ffdb349f958816ab1f04f659137cb82a2527590d22e19401cd3"
+    },
+    {
+      "path": "tests/unit/auth-routes.test.ts",
+      "sha256": "90082319b6925ded42351af57627b961f4aa5a6e097c3f505e1a05485b5647eb"
+    },
+    {
+      "path": "tests/unit/auth-server.test.ts",
+      "sha256": "adb9badb68a21838012fc289d766ece6965e5659bb10168221e6d8b651acc4e9"
+    },
+    {
+      "path": "tests/unit/claim-actions.test.ts",
+      "sha256": "18b9b727c15007538ab0c4eac704f9dc41bc1605220b1f14a3b819ae9bac53b3"
+    },
+    {
+      "path": "tests/unit/claim-form-context.test.ts",
+      "sha256": "f78dd805c6ad849f9bd8f528d642b71eaf5d78bc7897f46130a7e339e79d6b62"
+    },
+    {
+      "path": "tests/unit/claim-list-query.test.ts",
+      "sha256": "d9fcc2dd4e8bc91caa1b8c9a6168a881f487f9b2a16f736f074bebb91162fa22"
+    },
+    {
+      "path": "tests/unit/claim-list.test.tsx",
+      "sha256": "e2c26bcc7b4c9177ba4aed324fc9fbd8de52911f5d6585b10139d605ba965a36"
+    },
+    {
+      "path": "tests/unit/claim-section.test.tsx",
+      "sha256": "b0dd58a161b1d31fcf75a35a82226059ca4c923f97148048554eb7a1447841c0"
+    },
+    {
+      "path": "tests/unit/create-found-post.test.ts",
+      "sha256": "edb063ac962ab7b0d67adb47b0fc88b62dfebed42d3a7df8ec4e6e20fc07c9a7"
+    },
+    {
+      "path": "tests/unit/permission-runner.test.ts",
+      "sha256": "55e719052bc80ae2c09c84c15008a4a27f394a680d0340dc91afb95de62dfac6"
+    },
+    {
+      "path": "tests/unit/post-detail-page.test.tsx",
+      "sha256": "bc26899b51aa06574f6f7d8fa096ce997766a08e5af7da6e8a00eab986e2f442"
+    },
+    {
+      "path": "tests/unit/profile-update.test.ts",
+      "sha256": "9565e950fe7f897a917effd51fcb7a9f84c4f135db46b9c3ce43973534dd03da"
+    },
+    {
+      "path": "tests/unit/read-post.test.ts",
+      "sha256": "1ee64485eb989da90e13eb2b288076aab8b748834fae8561d86b71b7662f55c2"
+    }
+  ],
+  "scripts": [
+    {
+      "path": "D:/Codex/work/unilost/a9b/a8a-browser.mjs",
+      "sha256": "173c2986ed74e9e94b6d8bf551a91ce75225ba8df9705d57c48d6bbf4c8244af"
+    },
+    {
+      "path": "D:/Codex/work/unilost/a9b/a8b-browser.mjs",
+      "sha256": "6bc0ffd6d3299806e60ddf5f66b1b2a7dfa478732e93450afe6d65cd7921caeb"
+    },
+    {
+      "path": "D:/Codex/work/unilost/a9b/a9a-browser.mjs",
+      "sha256": "3ca32b26474b3ca9076403a20ab420aca7edca02840945e599ead562fa87d3fb"
+    },
+    {
+      "path": "D:/Codex/work/unilost/a9b/check-evidence.mjs",
+      "sha256": "01cdd6db91eb4506c6d547f6a9e87f4beb7378b436e8c3e89975df4451d2d6c6"
+    },
+    {
+      "path": "D:/Codex/work/unilost/a9b/journey.mjs",
+      "sha256": "5b2ea4e59e452efdd9eb1d35d4ee2927be31128f9b6a0920350f6c14c976702e"
+    }
+  ],
+  "results": [
+    {
+      "runtime": "dev",
+      "status": "PASS",
+      "browserGroups": 43,
+      "cleanup": "PASS"
+    },
+    {
+      "runtime": "worker",
+      "status": "PASS",
+      "browserGroups": 43,
+      "cleanup": "PASS"
+    }
+  ],
+  "unitTests": 307,
+  "hostedChecks": 558,
+  "ci": "PASS",
+  "independentReview": "PENDING",
+  "sheet": "NOT_UPDATED",
+  "productionHTTPS": "NOT_CHECKED",
+  "freshEmailPKCE": "NOT_CHECKED",
+  "C1": "OUT_OF_SCOPE"
+}

@@ -1,0 +1,56 @@
+{
+  "project": "lsaukzzmwbsztnlcrdpk",
+  "posts": [
+    "6327ba02-258e-4c70-8736-7d7bc09e71d3",
+    "c25159f5-9814-4b80-97c5-f52329501324",
+    "86499322-e53f-4608-ac39-e984ce251037",
+    "4691f66f-ff9f-4d07-a86b-4bb72760ab06",
+    "753b97f5-3644-440f-ab41-0a868cdd74b9"
+  ],
+  "requests": [
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/753b97f5-3644-440f-ab41-0a868cdd74b9/image",
+      "status": 200,
+      "dropped": false
+    }
+  ],
+  "cleanup": "PASS",
+  "failures": []
+}
