@@ -1,6 +1,14 @@
 # B1e — một ảnh mỗi tin
 
-Backend cho #14; chưa nối form/chỉnh sửa/hiển thị ảnh trong UI #13/#16. Không có gallery, crop hoặc nén ảnh.
+Backend cho #14; UI B1f cho #13 nối thêm/thay/xóa và hiển thị ảnh. Kiểm thử/bàn giao #16 ở `tests/e2e/post-image-ui.md`. Không có gallery, crop hoặc nén ảnh.
+
+## UI B1f
+
+Tạo tin trước rồi mới thêm ảnh vào đúng mã tin đã được server xác nhận. Trang chi tiết chỉ có một vùng ảnh; server chỉ cho hiện controls chính chủ ở searching/matched, API vẫn kiểm tra lại quyền. Chọn JPEG/PNG/WebP có dữ liệu, tối đa 5 MiB; preview chưa phải ảnh đã lưu. Bỏ chọn không ghi lên server. Xóa dùng AlertDialog có xác nhận/hủy và trả focus.
+
+GET lấy bytes private/no-store và hiển thị bằng object URL, dọn URL khi thay preview/ảnh hoặc unmount. PUT/DELETE được xác nhận mới thông báo thành công, tải lại bytes và refresh moderation. Lỗi tải/ghi hoặc JSON chưa xác nhận khóa thao tác ảnh đến khi mở lại tin. Link Tải lại tin là navigation đầy đủ tới `/posts/{id}`, nên từ form tạo tin vẫn mở đúng tin đã tạo; readback không được gọi là ghi thành công.
+
+Ứng dụng không tự retry mutation. Tuy nhiên Chromium đã được quan sát tự truyền lại PUT khi socket đóng trước mọi header phản hồi; API hiện không có idempotency key, không cam kết exactly-once ở tầng transport. Phép thử mất body JSON sau header xác nhận UI báo chưa rõ, khóa và không retry ở ứng dụng. Giới hạn kiểm thử/fixture tại runbook #16; không suy thành production hoặc mọi kiểu mất mạng.
 
 ## HTTP
 

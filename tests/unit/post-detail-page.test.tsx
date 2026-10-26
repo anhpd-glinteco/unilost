@@ -5,6 +5,7 @@ import PostDetail from "@/app/posts/[id]/page";
 const mocks = vi.hoisted(() => ({ readPost: vi.fn(), canManagePost: vi.fn() }));
 vi.mock("@/features/posts/queries", () => ({ readPost: mocks.readPost, canManagePost: mocks.canManagePost }));
 vi.mock("@/features/posts/post-management", () => ({ PostManagement: () => <section>Owner controls</section> }));
+vi.mock("@/features/posts/post-image", () => ({ PostImage: ({ postId, manageable }: { postId: string; manageable: boolean }) => <section data-image-post={postId} data-image-manageable={manageable} /> }));
 vi.mock("@/components/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/features/claims/claim-section", () => ({ ClaimSection: ({ postId }: { postId: string }) => <section data-claim-post={postId}>Claim form</section> }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("not-found"); } }));
