@@ -1,5 +1,12 @@
 # Test structure
 
+## B1f: UI ảnh và bàn giao #16
+
+- `unit/post-image-ui.test.tsx`: SSR loading và controls theo quyền; `unit/post-detail-page.test.tsx`: một vùng ảnh, chỉ owner ở searching/matched được quản lý, claim vẫn nhận đúng post ID.
+- `unit/post-image-ui-fixture.test.ts`: bridge từ chối sai project, app ngoài localhost và port sai trước khi ghi file/gọi Auth.
+- [Runbook browser](e2e/post-image-ui.md), `scripts/post-image-ui-fixture.mjs`, ảnh tổng hợp tại `fixtures/post-images/`: tạo rồi upload, preview/validation, thay/xóa, cập nhật bytes/moderation, double click, quyền, Auth bị thu hồi, desktop/mobile và mất body phản hồi sau commit. Bridge chỉ dành cho project test đã định danh; không triển khai, không đính kèm env hoặc fixture-control/key vào gói.
+- B1f chưa có CI cho diff chưa commit; review độc lập và tổng hợp Sheet còn thiếu. Kết quả từng lượt nằm trong handoff, không dùng kết quả lịch sử làm lượt chạy mới.
+
 - `unit/`: domain logic, validation và permission helpers.
 - `components/`: component tests.
 - `e2e/`: Playwright flows với Supabase test project.
