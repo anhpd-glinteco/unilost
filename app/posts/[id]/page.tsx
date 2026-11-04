@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { MatchSuggestions } from "@/features/posts/match-suggestions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
@@ -41,6 +43,9 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
           <ClaimSection postId={result.post.id} />
         </div>
       </article>}
+      {result.kind === "found" && ["searching", "matched"].includes(result.post.status) && <Suspense fallback={<p role="status" className="mt-10">Đang tải gợi ý…</p>}>
+        <MatchSuggestions key={result.post.id} postId={result.post.id} />
+      </Suspense>}
     </main>
   </div>;
 }
