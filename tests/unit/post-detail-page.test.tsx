@@ -43,3 +43,11 @@ it.each([true, false])("renders management only after server ownership check: %s
   expect(html.includes("Owner controls")).toBe(canManage);
   expect(mocks.canManagePost).toHaveBeenCalledWith(id);
 });
+
+it.each(["searching", "matched", "verifying", "returned", "closed"])("suggestions require loaded open source: %s", async status => {
+ const id = "12345678-1234-4234-8234-123456789abc";
+ mocks.readPost.mockResolvedValue({ kind: "found", post: { id, type: "found", title: "Keys", description: "Fixture", location: "Library", occurred_at: "2026-01-01", category: "keys", color: "black", status, moderation: "published" } });
+ const html = renderToStaticMarkup(await PostDetail({ params: Promise.resolve({ id }) }));
+ expect(html.includes(`data-suggestions-post="${id}"`)).toBe(["searching", "matched"].includes(status));
+ expect(html).toContain(`data-claim-post="${id}"`);
+});
