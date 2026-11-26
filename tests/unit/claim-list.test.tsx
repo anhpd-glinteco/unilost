@@ -7,9 +7,10 @@ import type { ClaimStatus } from "@/lib/types";
 const mocks = vi.hoisted(() => ({ list: vi.fn(), account: vi.fn() }));
 vi.mock("@/features/claims/queries", async original => ({ ...await original<typeof import("@/features/claims/queries")>(), readClaimList: mocks.list }));
 vi.mock("@/lib/auth/account", () => ({ requireAccount: mocks.account }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/components/site-header", () => ({ SiteHeader: () => <header>Header</header> }));
 const id = "12345678-1234-4234-8234-123456789abc";
-const row = { id, post_id: id, requester_id: id, proof: '<script>alert("fake")</script>', status: "pending", created_at: "2026-10-18T23:30:00Z", posts: { id, owner_id: id, title: "Fake post", deleted_at: null } };
+const row = { id, post_id: id, requester_id: id, proof: '<script>alert("fake")</script>', status: "pending", created_at: "2026-10-18T23:30:00Z", posts: { id, owner_id: id, title: "Fake post", type: "found", status: "searching", moderation: "published", deleted_at: null } };
 const pages = { sentPage: 2, receivedPage: 3 };
 beforeEach(() => { vi.resetAllMocks(); mocks.list.mockResolvedValue({ kind: "ready", claims: [row], hasNext: false }); });
 it.each(Object.keys(claimStatusLabels) as ClaimStatus[])("renders %s and escaped collapsed proof", async status => {
@@ -19,7 +20,7 @@ it.each(Object.keys(claimStatusLabels) as ClaimStatus[])("renders %s and escaped
   expect(html).toContain("&lt;script&gt;"); expect(html).not.toContain("<script>");
   expect(html).toContain("<details class="); expect(html).not.toContain(" open=");
   expect(html).toContain("<summary"); expect(html).toContain("19 thg 10, 2026");
-  expect(html).toContain(`/posts/${id}`); expect(html).not.toContain("<button");
+  expect(html).toContain(`/posts/${id}`); expect(html.includes("Hủy yêu cầu")).toBe(status === "pending");
 });
 it.each(["sent", "received"] as const)("paginates %s while preserving other page", async group => {
   mocks.list.mockResolvedValue({ kind: "ready", claims: [row], hasNext: true });
@@ -61,4 +62,34 @@ it("does not render page when account guard redirects guest", async () => {
   mocks.account.mockRejectedValue(new Error("redirect"));
   await expect(ClaimsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("redirect");
   expect(mocks.list).not.toHaveBeenCalled();
+});
+
+
+it.each([
+  ["found", "searching", "published", null, true],
+  ["found", "matched", "published", null, true],
+  ["lost", "searching", "published", null, false],
+  ["found", "verifying", "published", null, false],
+  ["found", "returned", "published", null, false],
+  ["found", "closed", "published", null, false],
+  ["found", "searching", "hidden", null, false],
+  ["found", "searching", "pending", null, false],
+  ["found", "searching", "published", "2026-10-18T10:00:00Z", false],
+])("received accept eligibility %s/%s/%s/%s", async (type, status, moderation, deleted_at, eligible) => {
+  mocks.list.mockResolvedValue({ kind: "ready", claims: [{ ...row, posts: { ...row.posts, type, status, moderation, deleted_at } }], hasNext: false });
+  const html = renderToStaticMarkup(await ClaimList({ group: "received", pages }));
+  expect(html).toContain("Từ chối");
+  expect(html).not.toContain("Hủy yêu cầu");
+  expect(/<button[^>]*disabled=""[^>]*>Chấp nhận/.test(html)).toBe(!eligible);
+});
+it.each(["accepted", "rejected", "cancelled", "completed"])("received %s has no decision buttons", async status => {
+  mocks.list.mockResolvedValue({ kind: "ready", claims: [{ ...row, status }], hasNext: false });
+  const html = renderToStaticMarkup(await ClaimList({ group: "received", pages }));
+  expect(html).not.toContain("<button");
+});
+it("sent pending on inaccessible post still permits cancel", async () => {
+  mocks.list.mockResolvedValue({ kind: "ready", claims: [{ ...row, posts: null }], hasNext: false });
+  const html = renderToStaticMarkup(await ClaimList({ group: "sent", pages }));
+  expect(html).toContain("Hủy yêu cầu");
+  expect(html).not.toContain('disabled=""');
 });

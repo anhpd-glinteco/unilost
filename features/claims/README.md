@@ -98,3 +98,12 @@ Các tiêu chí A5–A7 là đặc tả của A4; kết quả thực chạy đư
 - Đã gửi dùng quan hệ posts tùy chọn: claim và proof vẫn hiện khi RLS che tin. Tin không đọc được hoặc xóa mềm dùng nhãn không còn khả dụng, không có link chi tiết. Không lấy thông tin liên hệ người gửi; chỉ render trường cần thiết, không đưa owner/requester ID vào thẻ.
 - Proof chỉ có trong trang riêng tư, thu gọn bằng details/summary, render văn bản được escape; không ở URL/log/payload công khai. Trang force-dynamic/noindex, proxy hiện có đặt private/no-store. Ngày hiển thị theo Asia/Ho_Chi_Minh. Chưa nối hủy/chấp nhận/từ chối (A9a).
 - Unit/render và browser dùng fixture giả; kết quả, môi trường và giới hạn xem checkpoint A8b trong progress. Không suy rộng local Worker thành production HTTPS.
+
+## Triển khai A9a — xử lý claim
+
+- Claim pending trong Đã gửi có Hủy; Đã nhận có Chấp nhận/Từ chối. Cả ba dùng AlertDialog xác nhận trước khi gửi; hủy/từ chối không cho gửi lại trong MVP, chấp nhận chuyển tin sang xác minh, chưa phải hoàn trả C1.
+- Projection danh sách bổ sung type/status/moderation của tin. Chấp nhận chỉ bật khi found/published/chưa xóa/searching hoặc matched; hủy/từ chối vẫn dùng trên pending khi tin bị ẩn/đóng/xóa mềm. Admin chỉ thao tác theo vai trò người gửi/chủ tin của mình.
+- ClaimDecisions chỉ gửi claimId vào actions A6/A7 hiện có; RPC tiếp tục kiểm tra danh tính/quyền/điều kiện trong giao dịch. Không đổi chữ ký action, RPC, migration hoặc grants.
+- Trong lúc gửi, khóa cả nhóm nút trên claim và chặn gửi lặp. Thành công mới báo kết quả và router.refresh để cập nhật danh sách/tin, giữ hai tham số phân trang; các claim khác không tự chuyển trạng thái.
+- Lỗi/readback/mất phản hồi không báo thao tác thành công hoặc tự gửi lại. Hiển thị trạng thái đọc lại nếu có, giữ nút khóa và yêu cầu tải lại toàn trang trước khi thao tác tiếp. Phản hồi bằng role status/alert, hộp thoại hỗ trợ bàn phím và trả focus khi đóng.
+- Kết quả dev/Worker local, fixture cleanup, kiểm chứng cạnh tranh và giới hạn review xem checkpoint A9a trong progress; chưa thay nghiệm thu A9b hoặc production HTTPS.
