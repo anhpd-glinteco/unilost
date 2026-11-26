@@ -28,7 +28,7 @@ Giữ người phụ trách issue làm người rà soát: Phùng Đức Anh (fr
 | --- | --- | --- | --- |
 | A0 | Đọc repo và nguồn kế hoạch | #6–#8, #10 | Baseline, ma trận yêu cầu, use case tổng quan và bàn giao; #6/#8 dùng chung đặc tả. |
 | A1a | A0 | #9, #11 | Đăng nhập email/callback/đăng xuất Supabase và phiên server; không báo thành công khi thiếu cấu hình. |
-| A1b | A1a | #9, #11, #12 | Đăng ký/hồ sơ, UI phiên và kiểm tra bảo vệ route/thao tác ghi; tài khoản/fixture test Auth. |
+| A1b | A1a | #9, #11, #12 | Đăng ký OTP, hồ sơ chỉ đọc, UI phiên và guard route; khóa thao tác demo, fixture Auth/profile. Sửa hồ sơ sau khóa quyền DB ở A2. |
 | A2 | A1b; DB test riêng | #36, #7, #12 | Migration bổ sung và test quyền nền: không tự nâng role, tự duyệt tin hay đổi trường nhạy cảm. |
 | A3a | A2 | #15 | Tạo tin found thật bằng danh tính server và validation, mặc định pending. |
 | A3b | A3a; tin test được admin xuất bản | #19 | Đọc chi tiết thật, 404 đúng, khách không thấy tin riêng/ẩn/xóa; không fallback ID sai về tin demo. |

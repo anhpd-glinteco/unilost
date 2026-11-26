@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div> : <>
           <p className="mt-2 text-[#6f817a]">Đăng nhập để quản lý tin và yêu cầu của bạn.</p>
           <LoginForm returnTo={returnTo} initialError={error}/>
-          <p className="mt-6 text-center text-sm text-[#6f817a]">Chưa có tài khoản? <Link href="/auth/register" className="font-bold text-[#1c5546]">Đăng ký</Link></p>
+          <p className="mt-6 text-center text-sm text-[#6f817a]">Chưa có tài khoản? <Link href={`/auth/register?next=${encodeURIComponent(returnTo)}`} className="font-bold text-[#1c5546]">Đăng ký</Link></p>
         </>}
       </div>
     </main>
