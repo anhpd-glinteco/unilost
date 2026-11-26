@@ -3,19 +3,20 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { acceptClaim, cancelClaim, rejectClaim, type ClaimState } from "./actions";
+import { acceptClaim, cancelClaim, completeClaim, rejectClaim, type ClaimState } from "./actions";
 import { claimStatusLabels } from "./claim-status";
 import type { ClaimListGroup } from "./queries";
 import type { ClaimStatus } from "@/lib/types";
 
 const decisions = {
+  complete: { label: "Xác nhận đã trả đồ", description: "Chỉ xác nhận sau khi đã bàn giao đồ. Yêu cầu sẽ hoàn tất và tin chuyển sang đã trả.", success: "Đã xác nhận hoàn trả.", action: completeClaim },
   cancel: { label: "Hủy yêu cầu", description: "Sau khi hủy, bạn không thể gửi lại yêu cầu cho tin này trong phiên bản hiện tại.", success: "Đã hủy yêu cầu.", action: cancelClaim },
   accept: { label: "Chấp nhận", description: "Tin sẽ chuyển sang xác minh. Các yêu cầu khác vẫn chờ xử lý nhưng không thể được chấp nhận tiếp. Bước này chưa xác nhận đã trả đồ.", success: "Đã chấp nhận yêu cầu. Tin đã chuyển sang xác minh.", action: acceptClaim },
   reject: { label: "Từ chối", description: "Sau khi từ chối, người gửi không thể gửi lại yêu cầu cho tin này trong phiên bản hiện tại.", success: "Đã từ chối yêu cầu.", action: rejectClaim },
 };
 type Decision = keyof typeof decisions;
 
-export function ClaimDecisions({ claimId, status, group, canAccept }: { claimId: string; status: ClaimStatus; group: ClaimListGroup; canAccept: boolean }) {
+export function ClaimDecisions({ claimId, status, group, canAccept, canComplete = false }: { claimId: string; status: ClaimStatus; group: ClaimListGroup; canAccept: boolean; canComplete?: boolean }) {
   const router = useRouter();
   const submitted = useRef(false);
   const opener = useRef<HTMLButtonElement | null>(null);
@@ -46,9 +47,9 @@ export function ClaimDecisions({ claimId, status, group, canAccept }: { claimId:
   }
 
   return <div className="mt-4 space-y-3" aria-busy={pending}>
-    {status === "pending" && <div className="flex flex-wrap gap-3">
-      {(group === "sent" ? ["cancel"] as const : ["accept", "reject"] as const).map(decision => <button key={decision} type="button" aria-haspopup="dialog" disabled={pending || attempted || (decision === "accept" && !canAccept)} onClick={event => { opener.current = event.currentTarget; setOperation(decision); }} className="rounded-full border border-[#1c5546] px-4 py-2 text-sm font-semibold text-[#1c5546] disabled:cursor-not-allowed disabled:opacity-50">{decisions[decision].label}</button>)}
-      {group === "received" && !canAccept && <p className="w-full text-sm text-[#5f746d]">Tin hiện không đủ điều kiện chấp nhận. Bạn vẫn có thể từ chối yêu cầu.</p>}
+    {(status === "pending" || (status === "accepted" && group === "received" && canComplete)) && <div className="flex flex-wrap gap-3">
+      {(status === "accepted" ? ["complete"] as const : group === "sent" ? ["cancel"] as const : ["accept", "reject"] as const).map(decision => <button key={decision} type="button" aria-haspopup="dialog" disabled={pending || attempted || (decision === "accept" && !canAccept)} onClick={event => { opener.current = event.currentTarget; setOperation(decision); }} className="rounded-full border border-[#1c5546] px-4 py-2 text-sm font-semibold text-[#1c5546] disabled:cursor-not-allowed disabled:opacity-50">{decisions[decision].label}</button>)}
+      {status === "pending" && group === "received" && !canAccept && <p className="w-full text-sm text-[#5f746d]">Tin hiện không đủ điều kiện chấp nhận. Bạn vẫn có thể từ chối yêu cầu.</p>}
     </div>}
     {pending && <p role="status" className="text-sm">Đang xử lý yêu cầu…</p>}
     {success && <p role="status" className="text-sm text-[#28725c]">{success}</p>}

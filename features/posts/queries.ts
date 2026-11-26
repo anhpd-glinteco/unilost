@@ -46,3 +46,25 @@ export async function readPost(id: string) {
     return { kind: "error" } as const;
   }
 }
+
+const ownPostSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  moderation: z.enum(["pending", "published", "hidden"]),
+  status: z.enum(["searching", "matched", "verifying", "returned", "closed"]),
+});
+
+export async function readOwnPosts(ownerId: string) {
+  try {
+    const client = await createSupabaseServerClient(true);
+    if (!client) return null;
+    const result = await client.from("posts").select("id,title,moderation,status")
+      .eq("owner_id", ownerId).is("deleted_at", null)
+      .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(20);
+    if (result.error) return null;
+    const posts = z.array(ownPostSchema).safeParse(result.data);
+    return posts.success ? posts.data : null;
+  } catch {
+    return null;
+  }
+}

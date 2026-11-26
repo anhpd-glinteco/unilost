@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { acceptClaim, rejectClaim, cancelClaim, createClaim } from "@/features/claims/actions";
+import { completeClaim, acceptClaim, rejectClaim, cancelClaim, createClaim } from "@/features/claims/actions";
 import { claimSchema } from "@/lib/validation";
 import vectors from "../fixtures/claim-proofs.json";
 
@@ -44,7 +44,7 @@ describe("claim actions", () => {
     expect(await cancelClaim(initial, form())).toEqual({ error: "", claimId, status: "cancelled" });
     expect(mocks.rpc).toHaveBeenCalledWith("cancel_claim", { p_claim_id: claimId });
   });
-  it.each([createClaim, cancelClaim, acceptClaim, rejectClaim])("requires account and profile", async (action) => {
+  it.each([createClaim, cancelClaim, acceptClaim, rejectClaim, completeClaim])("requires account and profile", async (action) => {
     for (const account of [{ user: null, profile: null }, { user: { id: userId }, profile: null }]) {
       mocks.account.mockResolvedValue(account);
       expect((await action(initial, form())).error).not.toBe("");
@@ -134,4 +134,15 @@ describe.each([
     mocks.maybeSingle.mockResolvedValue({ data, error: null });
     expect(await action(initial, form())).toMatchObject({ claimId: null, status: null });
   });
+});
+
+it("completes using only claim ID and scopes uncertain readback to owner", async () => {
+  expect(await completeClaim(initial, form({ role: "admin" }))).toEqual({ error: "", claimId, status: "completed" });
+  expect(mocks.rpc).toHaveBeenCalledWith("complete_claim", { p_claim_id: claimId });
+  mocks.rpc.mockRejectedValue(new Error("private"));
+  mocks.maybeSingle.mockResolvedValue({ data: { id: claimId, status: "completed" }, error: null });
+  const result = await completeClaim(initial, form());
+  expect(result.status).toBe("completed"); expect(result.error).not.toBe("");
+  expect(mocks.eq).toHaveBeenCalledWith("posts.owner_id", userId);
+  expect(mocks.rpc).toHaveBeenCalledTimes(2);
 });

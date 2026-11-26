@@ -1,4 +1,27 @@
+import Link from "next/link";
 import { requireAccount } from "@/lib/auth/account";
-import Link from "next/link"; import { ArrowLeft, EyeOff, RotateCcw, ShieldCheck } from "lucide-react"; import { SiteHeader } from "@/components/site-header"; import { featuredPosts } from "@/lib/mock-data";
-export const metadata = { title: "Quản trị nội dung" };
-export default async function AdminPage() { await requireAccount("/admin", true); return <div className="min-h-screen bg-[#f7f8f4]"><SiteHeader/><main className="mx-auto max-w-6xl px-5 py-10 md:px-10 md:py-14"><Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f746d]"><ArrowLeft size={16}/> Trang chủ</Link><div className="mt-8 flex items-end justify-between"><div><p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[.18em] text-[#d87642]"><ShieldCheck size={16}/> Khu vực quản trị</p><h1 className="mt-2 font-serif text-5xl">Kiểm duyệt nội dung</h1></div><span className="rounded-full bg-[#e7f2ec] px-3 py-1.5 text-sm font-bold text-[#28725c]">Dữ liệu demo</span></div><div className="mt-8 overflow-hidden rounded-2xl border border-[#dfe9e2] bg-white"><table className="w-full text-left text-sm"><thead className="border-b border-[#edf2ee] bg-[#f7f8f4] text-[#6f817a]"><tr><th className="px-5 py-4 font-semibold">Tin đăng</th><th className="hidden px-5 py-4 font-semibold md:table-cell">Người đăng</th><th className="px-5 py-4 font-semibold">Trạng thái</th><th className="px-5 py-4"></th></tr></thead><tbody>{featuredPosts.map((post) => <tr key={post.id} className="border-b border-[#edf2ee] last:border-0"><td className="px-5 py-4"><span className="mr-3 text-xl">{post.emoji}</span><span className="font-semibold">{post.title}</span></td><td className="hidden px-5 py-4 text-[#6f817a] md:table-cell">{post.ownerName}</td><td className="px-5 py-4"><span className="rounded-full bg-[#e7f2ec] px-2.5 py-1 text-xs font-bold text-[#28725c]">Đã xuất bản</span></td><td className="px-5 py-4"><button disabled aria-label="Ẩn bài đăng" className="rounded-lg p-2 text-[#7e9188] hover:bg-[#fff0e4] hover:text-[#b65e2b]"><EyeOff size={17}/></button></td></tr>)}</tbody></table></div><div className="mt-5 flex items-center gap-2 text-sm text-[#6f817a]"><RotateCcw size={15}/> Bản demo — chưa lưu thao tác hoặc lịch sử kiểm duyệt.</div></main></div>; }
+import { SiteHeader } from "@/components/site-header";
+import { moderationSchema, readModeration } from "@/features/admin/queries";
+import { ModerationControls } from "@/features/admin/moderation-controls";
+export const metadata = { title: "Quản trị nội dung", robots: { index: false, follow: false } };
+export const dynamic = "force-dynamic";
+const labels = { pending: "Chờ duyệt", published: "Đã xuất bản", hidden: "Đã ẩn" };
+export default async function AdminPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAccount("/admin", true);
+  const params = await searchParams || {};
+  const moderation = moderationSchema.safeParse(params.moderation ?? "pending");
+  const page = typeof params.page === "string" && /^[1-9]\d{0,5}$/.test(params.page) ? Number(params.page) : params.page === undefined ? 1 : 0;
+  const result = moderation.success && page > 0 && page <= 100000 ? await readModeration(moderation.data, page) : null;
+  return <div className="min-h-screen bg-[#f7f8f4]"><SiteHeader /><main className="mx-auto max-w-6xl space-y-6 px-5 py-10">
+    <Link href="/">Trang chủ</Link><h1 className="font-serif text-4xl">Kiểm duyệt nội dung</h1>
+    <nav aria-label="Trạng thái kiểm duyệt" className="flex flex-wrap gap-4">{moderationSchema.options.map(state => <Link key={state} aria-current={moderation.success && moderation.data === state ? "page" : undefined} href={`/admin?moderation=${state}`}>{labels[state]}</Link>)}</nav>
+    {!result ? <div role="alert"><p>Không thể tải dữ liệu hoặc bộ lọc không hợp lệ.</p><a href="/admin" className="underline">Tải lại danh sách</a></div> : <>
+      <dl className="grid gap-3 sm:grid-cols-3">{result.counts.map(({ state, total }) => <div key={state} className="rounded-xl border bg-white p-4"><dt>{labels[state]}</dt><dd>{total ?? "Không tải được"}</dd></div>)}</dl>
+      {!result.posts.length && <p role="status">Không có tin ở trang này.</p>}
+      <ul className="space-y-4">{result.posts.map(post => <li key={post.id} className="space-y-3 break-words rounded-xl border bg-white p-5"><Link href={`/posts/${post.id}`} className="text-xl underline">{post.title}</Link><p>{labels[post.moderation]} · {post.status}</p><ModerationControls key={`${post.id}-${post.moderation}`} postId={post.id} moderation={post.moderation} /></li>)}</ul>
+      <nav aria-label="Phân trang kiểm duyệt" className="flex flex-wrap gap-4">{page > 1 && <Link href={`/admin?moderation=${moderation.success ? moderation.data : "pending"}&page=${page - 1}`}>Trang trước</Link>}<span>Trang {page}</span>{result.hasNext && <Link href={`/admin?moderation=${moderation.success ? moderation.data : "pending"}&page=${page + 1}`}>Trang sau</Link>}</nav>
+      <h2 className="font-serif text-2xl">20 thao tác kiểm duyệt gần nhất</h2>
+      {result.audit === null ? <p role="alert">Không thể tải nhật ký.</p> : <ul className="space-y-2">{result.audit.map(entry => <li key={entry.id} className="break-words">{entry.action} · <Link href={`/posts/${entry.post_id}`}>{entry.post_id}</Link> · <time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</time></li>)}</ul>}
+    </>}
+  </main></div>;
+}

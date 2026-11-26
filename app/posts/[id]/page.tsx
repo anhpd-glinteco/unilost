@@ -1,3 +1,5 @@
+import { StatusHistory } from "@/features/posts/status-history";
+import { getAccount } from "@/lib/auth/account";
 import { Suspense } from "react";
 import { MatchSuggestions } from "@/features/posts/match-suggestions";
 import Link from "next/link";
@@ -18,6 +20,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
   const result = await readPost(id);
   if (result.kind === "missing") notFound();
   const canManage = result.kind === "found" && await canManagePost(id);
+  const historyAccount = await getAccount();
   return <div className="min-h-screen bg-[#f7f8f4]">
     <SiteHeader />
     <main className="mx-auto max-w-5xl px-5 py-10 md:px-10 md:py-14">
@@ -41,6 +44,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
           </div>
           {canManage && <PostManagement post={result.post} />}
           <ClaimSection postId={result.post.id} />
+          {(canManage || historyAccount.profile?.role === "admin") && <StatusHistory postId={result.post.id} />}
         </div>
       </article>}
       {result.kind === "found" && ["searching", "matched"].includes(result.post.status) && <Suspense fallback={<p role="status" className="mt-10">Đang tải gợi ý…</p>}>
