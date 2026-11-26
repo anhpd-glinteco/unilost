@@ -1,4 +1,4 @@
--- Run after 0003; disposable fixtures roll back.
+-- Run after 0007; covers found regression and B1a lost creation; disposable fixtures roll back.
 begin;
 create temporary table a3a_ids (owner_id uuid, other_id uuid);
 insert into a3a_ids values (gen_random_uuid(), gen_random_uuid());
@@ -14,11 +14,14 @@ begin
  select owner_id,other_id into actor,other_actor from a3a_ids;
  insert into public.posts(owner_id,type,title,category,color,description,location,occurred_at)
  values(actor,'found','Found wallet','other','black','Disposable found post fixture','Library','2024-02-29') returning id into post_id;
+ insert into public.posts(owner_id,type,title,category,color,description,location,occurred_at)
+ values(actor,'lost','Lost wallet','other','black','Disposable lost post fixture','Library','2024-02-29');
+ if not exists(select 1 from public.posts where owner_id=actor and type='lost' and status='searching' and moderation='pending' and deleted_at is null) then
+ raise exception 'Lost owner/defaults incorrect'; end if;
  if not exists(select 1 from public.posts where id=post_id and status='searching' and moderation='pending' and deleted_at is null) then
  raise exception 'Owner/defaults incorrect'; end if;
  foreach attack in array array[
  format('insert into public.posts(owner_id,type,title,category,color,description,location,occurred_at) values(%L,''found'',''Found wallet'',''other'',''black'',''Disposable found post fixture'',''Library'',''2024-02-29'')',other_actor),
- format('insert into public.posts(owner_id,type,title,category,color,description,location,occurred_at) values(%L,''lost'',''Found wallet'',''other'',''black'',''Disposable found post fixture'',''Library'',''2024-02-29'')',actor),
  'insert into public.posts(id) values(gen_random_uuid())',
  'insert into public.posts(moderation) values(''published'')',
  'insert into public.posts(status) values(''returned'')',

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createFoundPost } from "@/features/posts/actions";
-import { foundPostSchema } from "@/features/posts/schemas";
+import { createFoundPost, createLostPost } from "@/features/posts/actions";
+import { foundPostSchema, createPostSchema } from "@/features/posts/schemas";
 
 const mocks = vi.hoisted(() => ({ account: vi.fn(), client: vi.fn(), from: vi.fn(), insert: vi.fn(), select: vi.fn(), single: vi.fn() }));
 vi.mock("@/lib/auth/account", () => ({ getAccount: mocks.account }));
@@ -29,34 +29,49 @@ describe("found input", () => {
     expect(foundPostSchema.safeParse({ ...valid, ...change }).success).toBe(false);
   });
 });
-describe("create found action", () => {
+describe.each([["found", createFoundPost], ["lost", createLostPost]] as const)("create %s action", (type, create) => {
   it("whitelists fields, fixes type and uses session owner", async () => {
-    const values = form({ ...valid, title: "  Found wallet  ", type: "lost" });
+    const values = form({ ...valid, title: "  Found wallet  ", type: type === "found" ? "lost" : "found" });
     Object.entries({ owner_id: "victim", status: "returned", moderation: "published", id: "forged" }).forEach(([key, value]) => values.set(key, value));
-    expect(await createFoundPost({ error: "forged", postId: id }, values)).toEqual({ error: "", postId: id });
-    expect(mocks.insert).toHaveBeenCalledWith({ type: "found", owner_id: id, title: valid.title, category: valid.category, color: valid.color, description: valid.description, location: valid.location, occurred_at: valid.occurredAt });
+    expect(await create({ error: "forged", postId: id }, values)).toEqual({ error: "", postId: id });
+    expect(mocks.insert).toHaveBeenCalledWith({ type, owner_id: id, title: valid.title, category: valid.category, color: valid.color, description: valid.description, location: valid.location, occurred_at: valid.occurredAt });
     expect(mocks.select).toHaveBeenCalledWith("id");
   });
   it.each([{ user: null, profile: null }, { user: { id }, profile: null }]) ("rejects missing account %j", async (account) => {
     mocks.account.mockResolvedValue(account);
-    expect((await createFoundPost(initial, form())).postId).toBeNull();
+    expect((await create(initial, form())).postId).toBeNull();
     expect(mocks.insert).not.toHaveBeenCalled();
   });
   it("rejects files and invalid input before insertion", async () => {
     const values = form(); values.set("title", new File(["test"], "test.txt"));
-    expect((await createFoundPost(initial, values)).postId).toBeNull();
+    expect((await create(initial, values)).postId).toBeNull();
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+  it("rejects invalid dates with the matching post-type message", async () => {
+    const result = await create(initial, form({ ...valid, occurredAt: "2026-02-29" }));
+    expect(result.postId).toBeNull();
+    expect(result.error).toContain(type === "found" ? "ngày nhặt" : "ngày thất lạc");
     expect(mocks.insert).not.toHaveBeenCalled();
   });
   it.each([null, { id: "invalid" }]) ("requires a returned UUID %j", async (data) => {
     mocks.single.mockResolvedValue({ error: null, data });
-    expect((await createFoundPost(initial, form())).postId).toBeNull();
+    expect((await create(initial, form())).postId).toBeNull();
   });
   it.each(["db", "network", "auth", "config"]) ("handles %s errors safely", async (failure) => {
     if (failure === "db") mocks.single.mockResolvedValue({ error: { message: "secret" }, data: { id } });
     if (failure === "network") mocks.single.mockRejectedValue(new Error("secret"));
     if (failure === "auth") mocks.account.mockRejectedValue(new Error("secret"));
     if (failure === "config") mocks.client.mockResolvedValue(null);
-    const result = await createFoundPost(initial, form());
+    const result = await create(initial, form());
     expect(result.postId).toBeNull(); expect(result.error).not.toContain("secret");
+  });
+});
+
+describe("shared lost input", () => {
+  it("trims valid lost content", () => {
+    expect(createPostSchema.parse({ ...valid, type: "lost", title: "  Lost wallet  " }).title).toBe("Lost wallet");
+  });
+  it.each(["2026-02-29", "2026-04-31", "invalid"])("rejects lost date %s", (occurredAt) => {
+    expect(createPostSchema.safeParse({ ...valid, type: "lost", occurredAt }).success).toBe(false);
   });
 });
