@@ -51,3 +51,17 @@ it.each(["searching", "matched", "verifying", "returned", "closed"])("suggestion
  expect(html.includes(`data-suggestions-post="${id}"`)).toBe(["searching", "matched"].includes(status));
  expect(html).toContain(`data-claim-post="${id}"`);
 });
+
+it.each([
+  [true, "searching", true], [true, "matched", true],
+  [true, "verifying", false], [true, "returned", false], [true, "closed", false],
+  [false, "searching", false], [false, "matched", false],
+] as const)("image writes require ownership and mutable status: %s/%s", async (owner, status, expected) => {
+  const id = "12345678-1234-4234-8234-123456789abc";
+  mocks.readPost.mockResolvedValue({ kind: "found", post: { id, type: "found", title: "Keys", description: "Fixture", location: "Library", occurred_at: "2026-01-01", category: "keys", color: "black", status, moderation: "published" } });
+  mocks.canManagePost.mockResolvedValue(owner);
+  const html = renderToStaticMarkup(await PostDetail({ params: Promise.resolve({ id }) }));
+  expect(html).toContain(`data-image-manageable="${expected}"`);
+  expect(html.match(/data-image-post=/g)).toHaveLength(1);
+  expect(html).toContain(`data-claim-post="${id}"`);
+});
