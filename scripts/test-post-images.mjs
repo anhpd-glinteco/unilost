@@ -12,6 +12,7 @@ const service = createClient(config.url, config.serviceKey, options);
 const bucket = service.storage.from("post-images");
 const users = [], posts = [], paths = [];
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64");
+const replacementPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC", "base64");
 let stage = "setup", checks = 0, failure;
 const must = (result, label) => { assert(!result.error && result.data, label); return result.data; };
 const check = (condition, label) => { assert(condition, label); checks++; };
@@ -20,7 +21,7 @@ async function api(actor, id, method = "GET", body, mime = "image/png", requestO
     method, headers: { Cookie: actor?.cookie ?? "", Origin: requestOrigin, "Content-Type": mime }, body, redirect: "error",
   });
   // Vinext dev rejects foreign origins before the route runs; unit tests cover its route headers.
-  if (requestOrigin === origin) check(response.headers.get("cache-control") === "private, no-store", "Private no-store response");
+  if (requestOrigin === origin) check(response.headers.get("cache-control") === "private, no-store", `Private no-store response for ${method} (HTTP ${response.status}, cache-control: ${response.headers.get("cache-control") ?? "missing"})`);
   return response;
 }
 async function post(owner, type = "found") {
@@ -82,14 +83,48 @@ try {
     const publicResponse=await fetch(`${config.url}/storage/v1/object/public/post-images/${path}`,{redirect:"error"});
     check(!publicResponse.ok,"Old public URL denied");
   }
+  async function checkRemovedObject(objectPath, label, start) {
+    const [prefix, name] = [objectPath.slice(0, objectPath.lastIndexOf("/")), objectPath.split("/").at(-1)];
+    const existence = await bucket.exists(objectPath);
+    const listed = await bucket.list(prefix, { search: name });
+    check(existence.data === false && !listed.error && !listed.data.some(object => object.name === name), label + " object absent");
+    while (true) {
+      const result = await bucket.download(objectPath);
+      const elapsed = performance.now() - start;
+      const missing = result.error && ["400", "404"].includes(String(result.error.statusCode ?? result.error.status))
+        && /not found|does not exist/i.test(result.error.message);
+      if (missing) {
+        console.log(label + " service-role URL stopped serving bytes after " + Math.ceil(elapsed) + " ms");
+        check(elapsed <= 60000, label + " cache expiry within 60 seconds");
+        break;
+      }
+      check(!result.error && elapsed < 60000, label + " cache expiry/readback");
+      await new Promise(resolve => setTimeout(resolve, Math.min(5000, 60000 - elapsed)));
+    }
+  }
+
   stage="replace and delete";
   must(await service.from("posts").update({moderation:"published",deleted_at:null}).eq("id",target.id).select(),"Restore fixture");
-  check((await api(owner,target.id,"PUT",png)).status===200,"Replace image");
+  check(!(await bucket.download(path)).error,"Warm old service-role URL");
+  const replaceStarted = performance.now();
+  check((await api(owner,target.id,"PUT",replacementPng)).status===200,"Replace image");
   const replacement=await linked(target.id); paths.push(replacement);
-  check(replacement!==path && !!(await bucket.download(path)).error,"Old file removed only after replace");
+  check(!!replacement && replacement!==path,"Replacement changes the linked path");
+  const ownerImage = await api(owner,target.id);
+  check(ownerImage.status === 200 && Buffer.from(await ownerImage.arrayBuffer()).equals(replacementPng), "Owner reads only replacement bytes");
+  check((await api(null,target.id)).status === 404 && (await api(stranger,target.id)).status === 404, "Pending replacement is private");
+  check(!!(await owner.client.storage.from("post-images").download(path)).error, "Client cannot read old object");
+  await checkRemovedObject(path, "Replace", replaceStarted);
+  check(!(await bucket.download(replacement)).error,"Warm replacement service-role URL");
   must(await service.from("posts").update({moderation:"published"}).eq("id",target.id).select(),"Publish disposable fixture");
+  const deleteStarted = performance.now();
   check((await api(owner,target.id,"DELETE")).status===200,"Delete image");
-  check(await linked(target.id)===null && !!(await bucket.download(replacement)).error,"Delete metadata and file");
+  check(await linked(target.id)===null,"Delete clears metadata");
+  for (const actor of [null, owner, stranger, admin]) {
+    check((await api(actor,target.id)).status === 404, "No image bytes after delete");
+  }
+  check(!!(await owner.client.storage.from("post-images").download(replacement)).error, "Client cannot read deleted object");
+  await checkRemovedObject(replacement, "Delete", deleteStarted);
   check(must(await service.from("posts").select("moderation").eq("id",target.id).single(),"Delete moderation").moderation==="pending","Delete unpublishes");
   check((await api(owner,target.id,"DELETE")).status===200,"Repeated delete");
   const ownAdminPost=await post(admin,"lost");

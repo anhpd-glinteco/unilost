@@ -9,9 +9,9 @@ import type { ClaimStatus } from "@/lib/types";
 export type ClaimState = { error: string; claimId: string | null; status: ClaimStatus | null };
 const claimResult = z.object({ id: z.string().uuid(), status: z.enum(["pending", "accepted", "rejected", "cancelled", "completed"]) });
 
-async function mutateClaim(values: FormData, operation: "create" | "cancel" | "accept" | "reject"): Promise<ClaimState> {
+async function mutateClaim(values: FormData, operation: "create" | "cancel" | "accept" | "reject" | "complete"): Promise<ClaimState> {
   const create = operation === "create";
-  const decide = operation === "accept" || operation === "reject";
+  const decide = operation === "accept" || operation === "reject" || operation === "complete";
   const failed: ClaimState = { error: "Chưa xác nhận được kết quả. Vui lòng tải lại trạng thái trước khi thử lại.", claimId: null, status: null };
   try {
     const account = await getAccount();
@@ -28,7 +28,7 @@ async function mutateClaim(values: FormData, operation: "create" | "cancel" | "a
         : await client.rpc(`${operation}_claim`, { p_claim_id: id.data });
       const returned = z.string().uuid().safeParse(result.data);
       if (!result.error && returned.success && (create || returned.data === id.data)) {
-        const status = { create: "pending", cancel: "cancelled", accept: "accepted", reject: "rejected" } as const;
+        const status = { create: "pending", cancel: "cancelled", accept: "accepted", reject: "rejected", complete: "completed" } as const;
         return { error: "", claimId: returned.data, status: status[operation] };
       }
     } catch { /* A lost response can follow a committed transaction; read back before retrying. */ }
@@ -58,4 +58,8 @@ export async function acceptClaim(_previous: ClaimState, values: FormData): Prom
 
 export async function rejectClaim(_previous: ClaimState, values: FormData): Promise<ClaimState> {
   return mutateClaim(values, "reject");
+}
+
+export async function completeClaim(_previous: ClaimState, values: FormData): Promise<ClaimState> {
+  return mutateClaim(values, "complete");
 }
