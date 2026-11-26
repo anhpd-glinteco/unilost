@@ -49,7 +49,12 @@ export async function runPermissionTests(env = process.env) {
     const response = await fetch(`${config.url}/rest/v1/${table}${id ? `?id=eq.${id}` : ""}`, {
       method, headers, body: payload ? JSON.stringify(payload) : undefined, redirect: "error",
     });
-    return { response, body: await response.json() };
+    const body = await response.json();
+    // Record server-generated IDs even when an attack unexpectedly succeeds.
+    if (table === "posts" && method === "POST" && response.ok && Array.isArray(body)) {
+      for (const row of body) if (typeof row.id === "string" && !ids.posts.includes(row.id)) ids.posts.push(row.id);
+    }
+    return { response, body };
   };
   try {
     // Admin-created fake users test Auth/trigger/RLS, not email delivery or PKCE.
@@ -111,6 +116,38 @@ export async function runPermissionTests(env = process.env) {
         requireResult(await service.from("profiles").update({ full_name: original.full_name, faculty: original.faculty }).eq("id", actor.id).select(), "Restore own fixture");
         checks++;
       }
+      stage = `${actor.name}: A3a create found post`;
+      const valid = { owner_id: actor.id, type: "found", title: "Found fixture", category: "other", color: "black",
+        description: "Disposable found post fixture", location: "Test", occurred_at: "2026-01-01" };
+      const created = await request(actor.token, "posts", "POST", valid);
+      if (!actor.token) {
+        assertDenied(created.response, created.body, "POST"); checks++;
+      } else {
+        assert(created.response.ok && created.body.length === 1, "Own found insert must succeed");
+        const post = created.body[0];
+        assert.equal(post.owner_id, actor.id);
+        assert.equal(post.status, "searching"); assert.equal(post.moderation, "pending");
+        assert.equal(post.deleted_at, null); checks++;
+        const own = await request(actor.token, "posts", "GET", null, post.id);
+        assert(own.response.ok && own.body.length === 1, "Owner reads pending post"); checks++;
+        const outsider = await request(actor.id === member.id ? stranger.token : member.token, "posts", "GET", null, post.id);
+        assert(outsider.response.ok && outsider.body.length === 0, "Stranger cannot read pending post"); checks++;
+        const guest = await request("", "posts", "GET", null, post.id);
+        assert(guest.response.ok && guest.body.length === 0, "Guest cannot read pending post"); checks++;
+        for (const change of [{ owner_id: actor.id === member.id ? stranger.id : member.id }, { type: "lost" },
+          { moderation: "published" }, { status: "returned" }, { id: ids.posts[1] },
+          { created_at: "2000-01-01T00:00:00Z" }, { updated_at: "2000-01-01T00:00:00Z" }, { deleted_at: null }]) {
+          const attack = await request(actor.token, "posts", "POST", { ...valid, ...change });
+          assertDenied(attack.response, attack.body, "POST"); checks++;
+        }
+        for (const change of [{ title: "a" }, { title: "a".repeat(101) }, { title: "    " },
+          { category: "" }, { color: "a".repeat(41) }, { description: "short" },
+          { description: "a".repeat(1001) }, { location: "a" }, { location: "a".repeat(121) },
+          { occurred_at: "2026-02-30" }]) {
+          const attack = await request(actor.token, "posts", "POST", { ...valid, ...change });
+          assert(attack.response.status === 400 && ["23514", "22008", "22007"].includes(attack.body.code), "Invalid content must fail validation"); checks++;
+        }
+      }
       const baseline = await snapshot();
       const attacks = [
         ["PATCH", { role: "admin" }, actor.id],
@@ -160,7 +197,7 @@ export async function runPermissionTests(env = process.env) {
       }
     }
   } catch {
-    failure = new Error(`A2 checks failed at: ${stage}. Details withheld to keep credentials and personal data out of logs.`);
+    failure = new Error(`Permission checks failed at: ${stage}. Details withheld to keep credentials and personal data out of logs.`);
   } finally {
     // Delete only IDs and paths allocated by this invocation, including failed attack inserts.
     if (objectPaths.length) {

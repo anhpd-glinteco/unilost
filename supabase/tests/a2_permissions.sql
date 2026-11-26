@@ -1,4 +1,4 @@
--- Read-only assertions; run after 0002, before the REST fixture runner.
+-- Read-only assertions; run after 0003, before the REST fixture runner.
 begin;
 do $$
 declare
@@ -26,7 +26,9 @@ begin
       for column_name in select attname from pg_attribute where attrelid = ('public.' || table_name)::regclass and attnum > 0 and not attisdropped loop
         foreach operation in array array['INSERT', 'UPDATE', 'REFERENCES'] loop
           allowed := role_name = 'authenticated' and table_name = 'profiles'
-            and column_name in ('full_name', 'faculty') and operation = 'UPDATE';
+            and column_name in ('full_name', 'faculty') and operation = 'UPDATE'
+            or role_name = 'authenticated' and table_name = 'posts' and operation = 'INSERT'
+              and column_name in ('owner_id','type','title','category','color','description','location','occurred_at');
           if has_column_privilege(role_name, 'public.' || table_name, column_name, operation) is distinct from allowed then
             raise exception 'Wrong column privilege: %.%.% %', role_name, table_name, column_name, operation;
           end if;
