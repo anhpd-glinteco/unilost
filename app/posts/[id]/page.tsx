@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { readPost } from "@/features/posts/queries";
+import { canManagePost, readPost } from "@/features/posts/queries";
+import { PostManagement } from "@/features/posts/post-management";
 import { ClaimSection } from "@/features/claims/claim-section";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const result = await readPost(id);
   if (result.kind === "missing") notFound();
+  const canManage = result.kind === "found" && await canManagePost(id);
   return <div className="min-h-screen bg-[#f7f8f4]">
     <SiteHeader />
     <main className="mx-auto max-w-5xl px-5 py-10 md:px-10 md:py-14">
@@ -34,6 +36,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
             <p>Trạng thái: {statuses[result.post.status]}</p>
             <p>Kiểm duyệt: {moderationLabels[result.post.moderation]}</p>
           </div>
+          {canManage && <PostManagement post={result.post} />}
           <ClaimSection postId={result.post.id} />
         </div>
       </article>}

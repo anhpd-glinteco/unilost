@@ -1,5 +1,18 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAccount } from "@/lib/auth/account";
+
+export async function canManagePost(id: string) {
+  if (!z.string().uuid().safeParse(id).success) return false;
+  try {
+    const account = await getAccount();
+    if (!account.user || !account.profile) return false;
+    const client = await createSupabaseServerClient(true);
+    const result = await client?.from("posts").select("id")
+      .eq("id", id).eq("owner_id", account.user.id).is("deleted_at", null).maybeSingle();
+    return !!result && !result.error && result.data?.id === id.toLowerCase();
+  } catch { return false; }
+}
 
 const postDetailSchema = z.object({
   id: z.string().uuid(),
