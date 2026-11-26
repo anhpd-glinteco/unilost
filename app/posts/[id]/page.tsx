@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { canManagePost, readPost } from "@/features/posts/queries";
 import { PostManagement } from "@/features/posts/post-management";
 import { ClaimSection } from "@/features/claims/claim-section";
+import { PostImage } from "@/features/posts/post-image";
 
 export const dynamic = "force-dynamic";
 const statuses = { searching: "Đang tìm", matched: "Có gợi ý phù hợp", verifying: "Đang xác minh", returned: "Đã hoàn trả", closed: "Đã đóng" };
@@ -24,7 +25,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
         <p className="mt-3">Vui lòng thử lại sau.</p>
         <a href={`/posts/${id}`} className="mt-4 inline-block underline">Thử lại</a>
       </section> : <article className="mt-8 grid gap-8 md:grid-cols-[.8fr_1.2fr]">
-        <div className="grid min-h-[250px] place-items-center rounded-3xl bg-[#f3dfc7] p-6 text-[#5f746d]">Chưa có ảnh</div>
+        <div className="grid min-h-[250px] min-w-0 place-items-center rounded-3xl bg-[#f3dfc7] p-6 text-[#5f746d]"><PostImage key={result.post.id} postId={result.post.id} manageable={canManage && ["searching", "matched"].includes(result.post.status)} /></div>
         <div className="min-w-0 break-words">
           <p className="font-semibold text-[#28725c]">{result.post.type === "lost" ? "Tin thất lạc" : "Tin nhặt được đồ"}</p>
           <h1 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">{result.post.title}</h1>
