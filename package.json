@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "node scripts/test-permissions.mjs",
+    "test:images": "node scripts/test-post-images.mjs",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate"
   },

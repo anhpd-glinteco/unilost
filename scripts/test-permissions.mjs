@@ -88,7 +88,7 @@ export async function runPermissionTests(env = process.env) {
     }));
     const rows = {
       posts: [posts[0]],
-      post_images: [{ id: ids.post_images[0], post_id: posts[0].id, storage_path: `${member.id}/a2-${run}/seed.txt`, alt_text: "A2 fixture" }],
+      post_images: [{ id: ids.post_images[0], post_id: posts[0].id, storage_path: `${member.id}/a2-${run}/seed.png`, alt_text: "A2 fixture" }],
       claim_requests: [{ id: ids.claim_requests[0], post_id: posts[0].id, requester_id: stranger.id, proof: "Disposable fake proof", status: "pending" }],
       status_history: [{ id: ids.status_history[0], post_id: posts[0].id, from_status: null, to_status: "searching", actor_id: member.id, note: "A2 fixture" }],
       moderation_actions: [{ id: ids.moderation_actions[0], post_id: posts[0].id, admin_id: admin.id, action: "restore", reason: "A2 fixture" }],
@@ -96,8 +96,9 @@ export async function runPermissionTests(env = process.env) {
     stage = "seed fixture rows";
     for (const table of tables.slice(1)) requireResult(await service.from(table).insert(rows[table]).select(), `Seed ${table}`);
     const seedPath = rows.post_images[0].storage_path;
-    objectPaths.push(seedPath, `${member.id}/a2-${run}/attack.txt`);
-    requireResult(await service.storage.from("post-images").upload(seedPath, "A2 original", { contentType: "text/plain" }), "Seed storage object");
+    const seedImage = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64");
+    objectPaths.push(seedPath, `${member.id}/a2-${run}/attack.png`);
+    requireResult(await service.storage.from("post-images").upload(seedPath, seedImage, { contentType: "image/png" }), "Seed storage object");
 
     const actors = [{ name: "guest", token: "", id: member.id },
       { name: "member", ...member }, { name: "stranger", ...stranger }, { name: "admin", ...admin }];
@@ -554,19 +555,19 @@ export async function runPermissionTests(env = process.env) {
         }
       }
       stage = `${actor.name}: blocked storage writes`;
-      const headers = { apikey: config.key, "Content-Type": "text/plain" };
+      const headers = { apikey: config.key, "Content-Type": "image/png" };
       if (actor.token || config.key.split(".").length === 3) headers.Authorization = `Bearer ${actor.token || config.key}`;
       for (const [method, path] of [["POST", objectPaths[1]], ["PUT", seedPath], ["DELETE", seedPath]]) {
         const result = await fetch(`${config.url}/storage/v1/object/post-images${method === "DELETE" ? "" : `/${path}`}`, {
-          method, headers: { ...headers, "Content-Type": method === "DELETE" ? "application/json" : "text/plain" },
-          body: method === "DELETE" ? JSON.stringify({ prefixes: [path] }) : "Injected", redirect: "error",
+          method, headers: { ...headers, "Content-Type": method === "DELETE" ? "application/json" : "image/png" },
+          body: method === "DELETE" ? JSON.stringify({ prefixes: [path] }) : seedImage, redirect: "error",
         });
         const body = await result.json();
         assertStorageDenied(result, body, method);
         const blob = requireResult(await service.storage.from("post-images").download(seedPath), "Original storage object remains");
-        assert.equal(await blob.text(), "A2 original", "Storage object changed");
+        assert.deepEqual(Buffer.from(await blob.arrayBuffer()), seedImage, "Storage object changed");
         const list = requireResult(await service.storage.from("post-images").list(`${member.id}/a2-${run}`), "List fixture storage");
-        assert.deepEqual(list.map((item) => item.name), ["seed.txt"], "Unexpected uploaded object");
+        assert.deepEqual(list.map((item) => item.name), ["seed.png"], "Unexpected uploaded object");
         checks++;
       }
     }
