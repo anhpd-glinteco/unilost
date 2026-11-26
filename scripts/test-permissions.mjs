@@ -100,6 +100,26 @@ export async function runPermissionTests(env = process.env) {
 
     const actors = [{ name: "guest", token: "", id: member.id },
       { name: "member", ...member }, { name: "stranger", ...stranger }, { name: "admin", ...admin }];
+    stage = "A3b read visibility";
+    for (const state of ["published", "pending", "hidden", "deleted"]) {
+      requireResult(await service.from("posts").update({
+        moderation: state === "deleted" ? "published" : state,
+        deleted_at: state === "deleted" ? "2026-01-02T00:00:00Z" : null,
+      }).eq("id", posts[0].id).select(), "Set disposable post visibility");
+      for (const actor of actors) {
+        const read = await request(actor.token, "posts", "GET", null, posts[0].id);
+        const privileged = !!actor.token && [member.id, admin.id].includes(actor.id);
+        // Deleted rows remain readable to owner/admin in DB; the detail query excludes them.
+        assert(read.response.ok && read.body.length === (state === "published" || privileged ? 1 : 0), `Unexpected ${state} visibility for ${actor.name}`);
+        const headers = { apikey: config.key };
+        if (actor.token || config.key.split(".").length === 3) headers.Authorization = `Bearer ${actor.token || config.key}`;
+        const detail = await fetch(`${config.url}/rest/v1/posts?id=eq.${posts[0].id}&deleted_at=is.null&select=id`, { headers, redirect: "error" });
+        const body = await detail.json();
+        assert(detail.ok && body.length === (state !== "deleted" && (state === "published" || privileged) ? 1 : 0), `Unexpected detail visibility for ${actor.name}`);
+        checks += 2;
+      }
+    }
+    requireResult(await service.from("posts").update({ moderation: "published", deleted_at: null }).eq("id", posts[0].id).select(), "Restore disposable post");
     for (const actor of actors) {
       console.log(`Checking ${actor.name}: profile, REST and Storage permissions...`);
       stage = `${actor.name}: read and profile checks`;
