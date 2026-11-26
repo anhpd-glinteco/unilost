@@ -11,8 +11,8 @@ Ngày rà soát: 17/10/2026. Mã nguồn gốc: `ca1a170ea0cde0b005d5b0de24c2158
 | Mã / yêu cầu | Issue | Bằng chứng trong repo | Hiện trạng | Nghiệm thu / phiên |
 | --- | --- | --- | --- | --- |
 | R01 — yêu cầu/use case | #6, #8, #10 | requirements.md; report/use-cases.md; diagrams/use-cases.puml | A0 có đặc tả mục tiêu; chưa phải luồng đã chạy | Soát actor/luồng/ngoại lệ; A0, A4 |
-| R02 — Auth và phiên | #9, #11, #12 | app/auth/login/page.tsx; auth/callback/route.ts; lib/supabase/server.ts; proxy.ts | A1b: đăng ký tên/email dùng OTP PKCE; hồ sơ chỉ đọc từ DB; header phiên và guard dashboard/claims/new/admin đã kiểm tra local/mô phỏng. Email, trigger và RLS Supabase thật chưa kiểm chứng | Provider/trigger thật, khóa quyền DB và sửa hồ sơ; A2 |
-| R03 — quyền dữ liệu | #7, #36 | supabase/migrations/0001_initial.sql | Một phần; RLS có nhưng còn rộng; DB thực tế chưa kiểm chứng | Test API với 5 vai trò, chặn nâng quyền; A2 |
+| R02 — Auth và phiên | #9, #11, #12 | app/auth; app/dashboard/actions.ts; components/auth/profile-form.tsx | A2: email/PKCE thật hộp thư 1, trigger/profile/role và lưu tên/khoa thật PASS; header desktop/mobile, logout/guard PASS. Cờ chỉ bật local project test, template/production mặc định tắt | Hộp thư 2 đang 429 over_email_send_rate_limit; HTTPS/Worker chưa kiểm chứng, chưa nghiệm thu toàn bộ A2 |
+| R03 — quyền dữ liệu | #7, #36 | supabase/migrations/0002_a2_permissions.sql; supabase/tests; scripts/test-permissions.mjs | A2 đã áp dụng trên project test: SQL assertions + 77 kiểm tra actor + 113 Auth/REST/Storage PASS, fixture tự động đã dọn; role không tự nâng, tên/khoa chỉ tự sửa, ghi demo bị khóa | Quyền nền đã kiểm chứng trên project test; workflow tin/claim và điều kiện rộng hơn của #36 còn tiếp tục |
 | R04 — tin/ảnh | #13–#16 | app/posts/new/page.tsx; post_images/storage trong SQL | UI demo có guard; form lưu/upload bị khóa, bỏ success giả ở A1b; seed.sql chỉ có chú thích | CRUD, file sai/lỗi, ownership; A3, B1 |
 | R05 — feed/tìm/chi tiết | #17–#20 | app/posts/page.tsx; app/posts/[id]/page.tsx; components/search-shell.tsx | Mock; lọc client; ID sai trả featuredPosts[0]; chưa phân trang/query thật | 404, quyền xem, lọc/thứ tự/page; A3b, B2 |
 | R06 — matching giải thích | #21–#24 | lib/matching.ts; lib/matching.test.ts | Có hàm và 2 test; chưa chạy test; chưa query ứng viên thật | Điểm, ngưỡng, tiếng Việt, loại tin returned; B3 |
@@ -29,9 +29,9 @@ Các nhận định dưới đây dựa trên SQL/code hiện tại. Cần tái 
 
 | Mã | Phát hiện và tác động | Xử lý / kiểm tra |
 | --- | --- | --- |
-| S01 | `users update self` kiểm tra id nhưng chưa hạn chế đổi `profiles.role`; có nguy cơ tự nâng admin nếu grant cho phép | A2: quyền cột/trigger hoặc cơ chế tương đương; test sửa role trực tiếp. |
-| S02 | Insert/update posts chỉ ràng owner; chưa giới hạn moderation/status; chủ tin có thể tự duyệt hoặc bỏ qua workflow nếu grant cho phép | A2/A3: khóa trường hệ thống và test API trực tiếp. |
-| S03 | Insert claim chỉ kiểm requester; update cho mọi bên liên quan, chưa giới hạn trường/trạng thái/actor | A5–A7: mọi ghi phải tuân state machine, không đổi post/requester/proof tùy ý sau tạo. |
+| S01 | Migration 0001 cho sửa cả role nếu grant cho phép | A2/0002 đã khóa quyền bảng/cột trên project test; SQL/REST thật chứng minh không tự đổi role/id/ngày tạo. Chưa tuyên bố production đã áp dụng. |
+| S02 | Migration 0001 chưa khóa moderation/status | A2/0002 đã khóa ghi tin của client trên project test, kể cả admin ứng dụng; REST thật PASS. A3/B1 mới mở lại theo workflow. |
+| S03 | Migration 0001 cho ghi claim rộng, chưa có state machine | A2/0002 đã khóa ghi claim trên project test, REST thật PASS. A5–A7 mới mở mutation theo state machine/giao dịch. |
 | S04 | Chưa có unique accepted/completed hay khóa tin khi quyết định | A7: constraint + giao dịch; test hai kết nối thật. |
 | S05 | Bucket ảnh public và policy đọc toàn bucket; ẩn tin không bảo vệ URL ảnh đã biết | B1/A2: quyết định ảnh công khai hay private theo yêu cầu; nếu bảo vệ ảnh tin ẩn thì private bucket/signed URL, test URL trực tiếp. |
 | S06 | `postSchema` mới kiểm ngày không rỗng; form chưa gọi schema. A1a đã sửa thiếu cấu hình Auth báo gửi thành công, có test và smoke browser | Còn A3/B1: validation ngày/file tại trust boundary. |
@@ -42,7 +42,7 @@ Các nhận định dưới đây dựa trên SQL/code hiện tại. Cần tái 
 
 | Màn hình | Đã thấy trong code | Chưa có/chưa kiểm chứng |
 | --- | --- | --- |
-| Login/Register/Header | A1b: đăng ký tên/email, profile chỉ đọc, header desktop/mobile, logout và guard server; smoke Auth/profile mô phỏng | Email/trigger/profile/RLS thật; chỉnh sửa hồ sơ sau khi khóa quyền DB ở A2. |
+| Login/Register/Header | A2: email/PKCE thật hộp thư 1; form/action tên/khoa và header mobile/desktop, guard/logout thật đạt trên project test | Hộp thư 2 đang bị hạn mức email; HTTPS/Worker và nghiệm thu rộng hơn còn thiếu. |
 | New post | Form demo có guard, bị vô hiệu hóa và không báo lưu thành công | Persist, validation server, upload/progress/lỗi, sửa/đóng tin. |
 | Posts/Search | Cards, query/type/category client, empty | Loading/error dữ liệu thật, filter khác, sort/page, quyền xem. |
 | Post detail | Mock, lý do matching | 404 thật, ảnh thật, form claim và điều kiện theo type/status. |
