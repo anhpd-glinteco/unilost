@@ -2,6 +2,8 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import PostDetail from "@/app/posts/[id]/page";
 
+vi.mock("@/features/posts/match-suggestions", () => ({ MatchSuggestions: ({ postId }: { postId: string }) => <section data-suggestions-post={postId} /> }));
+
 const mocks = vi.hoisted(() => ({ readPost: vi.fn(), canManagePost: vi.fn() }));
 vi.mock("@/features/posts/queries", () => ({ readPost: mocks.readPost, canManagePost: mocks.canManagePost }));
 vi.mock("@/features/posts/post-management", () => ({ PostManagement: () => <section>Owner controls</section> }));
