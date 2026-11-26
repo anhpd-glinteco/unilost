@@ -1,6 +1,6 @@
 # Đặc tả use case UniLost
 
-Phiên bản A0, 17/10/2026. **Thiết kế mục tiêu**, chưa xác nhận triển khai; đối chiếu [baseline](../baseline.md) để biết trạng thái thật. Dùng chung cho #6/#8/#10, A4 khóa hợp đồng claim trước mutation.
+Phiên bản A0, cập nhật hợp đồng claim A4 ngày 18/10/2026. **Thiết kế mục tiêu**, chưa xác nhận triển khai; đối chiếu [baseline](../baseline.md) và [checkpoint](../progress.md) để biết trạng thái thật. Dùng chung cho #6/#8/#10; [hợp đồng claim A4](../../features/claims/README.md) là nguồn chi tiết về quyền, chuyển trạng thái và nghiệm thu trước mutation.
 
 ## Actor và quy tắc chung
 
@@ -39,14 +39,14 @@ Sơ đồ: [Hình 2.1 — Use case tổng quan](diagrams/use-cases.puml).
 
 - **Actor:** Thành viên với vai trò người yêu cầu. **Yêu cầu:** R07, #25–#28.
 - **Tiền điều kiện:** Có phiên; tin found đã published, chưa xóa, đang searching/matched; không phải tin của mình; chưa có claim của người gửi trên tin này.
-- **Luồng chính:** Mở chi tiết → nhập proof 10–1.000 ký tự → server xác thực, kiểm tra tin và validate → tạo pending → xem claim trong danh sách đã gửi.
+- **Luồng chính:** Mở chi tiết → nhập proof → server xác thực, kiểm tra tin, trim đầu/cuối proof rồi validate 10–1.000 ký tự → lưu proof đã parse trong claim pending → xem claim trong danh sách đã gửi.
 - **Ngoại lệ:** Sai điều kiện/quyền, proof sai, tin đã đổi trạng thái, gửi trùng hoặc lỗi mạng/DB phải thất bại rõ ràng; không tạo bản ghi trùng. Không tự retry bằng cách tạo claim mới khi kết quả gửi chưa rõ.
 - **Hậu điều kiện:** Một claim pending của đúng người gửi hoặc không thay đổi khi thất bại; proof chỉ người gửi, chủ tin và admin được đọc.
 
 ## UC05 — Hủy claim
 
 - **Actor:** Người yêu cầu. **Yêu cầu:** R07, #25/#27/#28.
-- **Tiền điều kiện:** Claim của chính mình và còn pending.
+- **Tiền điều kiện:** Claim của chính mình và còn pending; không yêu cầu tin còn công khai hoặc còn mở.
 - **Luồng chính:** Chọn hủy → server kiểm tra danh tính/trạng thái hiện tại → chuyển cancelled → cập nhật UI.
 - **Ngoại lệ:** Claim đã được xử lý hoặc không thuộc mình: từ chối, lấy lại trạng thái mới; thao tác lặp không gây chuyển trạng thái ngoài quy tắc.
 - **Hậu điều kiện:** Claim cancelled; không xóa bằng chứng/lịch sử; MVP chưa cho gửi lại sau hủy.
@@ -54,7 +54,7 @@ Sơ đồ: [Hình 2.1 — Use case tổng quan](diagrams/use-cases.puml).
 ## UC06 — Chấp nhận / từ chối claim
 
 - **Actor:** Chủ tin found. **Yêu cầu:** R08, #25–#28.
-- **Tiền điều kiện:** Claim pending trên tin của mình; quyết định accepted chỉ khi tin còn đủ điều kiện và chưa có accepted/completed.
+- **Tiền điều kiện:** Claim pending trên tin của mình. Accepted chỉ khi tin found/published/chưa xóa/searching hoặc matched và chưa có accepted/completed; rejected không yêu cầu tin còn công khai hoặc còn mở.
 - **Luồng chính:** Xem danh sách nhận và proof → chọn chấp nhận/từ chối → server khóa tin và kiểm tra lại → giao dịch cập nhật claim; nếu accepted thì tin verifying và ghi lịch sử → commit → phản hồi UI.
 - **Ngoại lệ:** Người ngoài/admin không phải chủ tin không được quyết định; conflict, claim đã kết thúc hay DB lỗi phải rollback, không ghi dở. Hai lần accept cạnh tranh chỉ một thành công.
 - **Hậu điều kiện:** Pending → accepted/rejected. Các claim khác giữ pending, không được accepted tiếp sau khi tin verifying. MVP chưa cho gửi lại claim đã rejected.
