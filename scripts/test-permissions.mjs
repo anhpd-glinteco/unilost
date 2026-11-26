@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { readFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
 
 export function testConfig(env) {
@@ -167,6 +168,124 @@ export async function runPermissionTests(env = process.env) {
     requireResult(await service.from("posts").update({ moderation: "published", deleted_at: null,
       status: "searching" }).eq("id", posts[0].id).select(), "Restore claim fixture post");
     console.log("A5 PASS: 100 claim list/ID/embedded reads across five actors and five post states.");
+    stage = "A6 create/cancel RPC";
+    const rpc = async (actor, name, payload) => {
+      const result = await request(actor?.token || "", `rpc/${name}`, "POST", payload);
+      if (result.response.ok && typeof result.body === "string" && !ids.claim_requests.includes(result.body)) {
+        ids.claim_requests.push(result.body);
+      }
+      return result;
+    };
+    const denyRpc = (result, code) => {
+      assert(!result.response.ok && result.body?.code === code, "Unexpected RPC denial"); checks++;
+    };
+    const newPost = async (change = {}) => {
+      const post = { ...posts[0], id: randomUUID(), ...change };
+      ids.posts.push(post.id);
+      return requireResult(await service.from("posts").insert(post).select().single(), "Create A6 fixture post");
+    };
+    const proofVectors = JSON.parse(await readFile(new URL("../tests/fixtures/claim-proofs.json", import.meta.url), "utf8"));
+    for (const [index, vector] of proofVectors.entries()) {
+      stage = `A6 proof vector ${index}`;
+      const post = await newPost();
+      const proof = vector.text.repeat(vector.repeat);
+      const result = await rpc(outsider, "create_claim", { p_post_id: post.id, p_proof: proof });
+      if (!vector.valid) {
+        denyRpc(result, "22023");
+        const claims = requireResult(await service.from("claim_requests").select("id").eq("post_id", post.id), "Read invalid proof fixture");
+        assert.equal(claims.length, 0); checks++;
+      } else {
+        assert(result.response.ok && typeof result.body === "string", "Valid proof rejected");
+        const claim = requireResult(await service.from("claim_requests").select("*").eq("id", result.body).single(), "Read created claim");
+        assert.equal(claim.proof, proof.trim()); assert.equal(claim.requester_id, outsider.id);
+        assert.equal(claim.status, "pending"); assert.equal(claim.post_id, post.id); checks++;
+        const savedPost = requireResult(await service.from("posts").select("*").eq("id", post.id).single(), "Read claim post");
+        const history = requireResult(await service.from("status_history").select("id").eq("post_id", post.id), "Read claim history");
+        assert.deepEqual(savedPost, post); assert.equal(history.length, 0); checks++;
+      }
+    }
+    const invalidPost = await newPost();
+    stage = "A6 RPC input types and create eligibility";
+    for (const p_proof of [null, 1234567890, { note: "Long fake proof" }, ["Long fake proof"]]) {
+      const result = await rpc(outsider, "create_claim", { p_post_id: invalidPost.id, p_proof });
+      assert(!result.response.ok && ["22023", "22P02"].includes(result.body?.code), "Invalid proof type accepted"); checks++;
+    }
+    denyRpc(await rpc(null, "create_claim", { p_post_id: invalidPost.id, p_proof: "Disposable fake proof" }), "42501");
+    denyRpc(await rpc(member, "create_claim", { p_post_id: invalidPost.id, p_proof: "Disposable fake proof" }), "42501");
+    for (const change of [{ type: "lost" }, { moderation: "pending" }, { moderation: "hidden" },
+      { deleted_at: "2026-01-02T00:00:00Z" }, { status: "closed" }, { status: "verifying" }, { status: "returned" }]) {
+      const post = await newPost(change);
+      for (const actor of [outsider, admin]) {
+        denyRpc(await rpc(actor, "create_claim", { p_post_id: post.id, p_proof: "Disposable fake proof" }), "42501");
+      }
+    }
+    denyRpc(await rpc(outsider, "create_claim", { p_post_id: randomUUID(), p_proof: "Disposable fake proof" }), "42501");
+    denyRpc(await rpc(outsider, "create_claim", { p_post_id: "invalid", p_proof: "Disposable fake proof" }), "22P02");
+    denyRpc(await rpc(outsider, "create_claim", { p_post_id: invalidPost.id, p_proof: "Disposable fake proof", requester_id: stranger.id }), "PGRST202");
+    for (const actor of [outsider, admin]) {
+      const post = await newPost({ status: "matched" });
+      const result = await rpc(actor, "create_claim", { p_post_id: post.id, p_proof: "Disposable fake proof" });
+      assert(result.response.ok, "Eligible member/admin cannot create"); checks++;
+      const cancel = await rpc(actor, "cancel_claim", { p_claim_id: result.body });
+      assert(cancel.response.ok && cancel.body === result.body, "Requester cannot cancel own claim"); checks++;
+    }
+    for (const state of ["published", "pending", "hidden", "deleted", "closed"]) {
+      stage = `A6 cancel on ${state}`;
+      const post = await newPost();
+      const result = await rpc(outsider, "create_claim", { p_post_id: post.id, p_proof: "Disposable fake proof" });
+      assert(result.response.ok, "Cannot prepare pending claim"); checks++;
+      const claimId = result.body;
+      const other = { id: randomUUID(), post_id: post.id, requester_id: stranger.id, proof: "Other disposable proof" };
+      ids.claim_requests.push(other.id);
+      requireResult(await service.from("claim_requests").insert(other).select(), "Seed untouched A6 claim");
+      const before = await snapshot();
+      for (const actor of [null, member, stranger, admin]) {
+        denyRpc(await rpc(actor, "cancel_claim", { p_claim_id: claimId }), "42501");
+      }
+      assert.deepEqual(await snapshot(), before, "Denied RPC changed data"); checks++;
+      requireResult(await service.from("posts").update({
+        moderation: ["hidden", "pending"].includes(state) ? state : "published",
+        deleted_at: state === "deleted" ? "2026-01-02T00:00:00Z" : null,
+        status: state === "closed" ? "closed" : "searching",
+      }).eq("id", post.id).select(), "Change A6 fixture visibility");
+      const unchanged = await snapshot();
+      const cancelled = await rpc(outsider, "cancel_claim", { p_claim_id: claimId });
+      assert(cancelled.response.ok && cancelled.body === claimId, "Pending cancellation failed"); checks++;
+      const after = await snapshot();
+      for (const table of tables.filter((table) => table !== "claim_requests")) {
+        assert.deepEqual(after[table], unchanged[table], "Cancel changed unrelated data");
+      }
+      assert.deepEqual(after.claim_requests.filter((row) => row.id !== claimId), unchanged.claim_requests.filter((row) => row.id !== claimId));
+      const saved = after.claim_requests.find((row) => row.id === claimId);
+      const original = unchanged.claim_requests.find((row) => row.id === claimId);
+      assert(saved.updated_at >= original.updated_at);
+      assert.deepEqual(saved, { ...original, status: "cancelled", updated_at: saved.updated_at }); checks++;
+      denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: claimId }), "42501");
+      requireResult(await service.from("posts").update({ moderation: "published", deleted_at: null, status: "searching" }).eq("id", post.id).select(), "Restore A6 fixture");
+      denyRpc(await rpc(outsider, "create_claim", { p_post_id: post.id, p_proof: "Another disposable proof" }), "23505");
+    }
+    const racePost = await newPost();
+    stage = "A6 concurrent creates";
+    const race = await Promise.all([1, 2].map(() => rpc(outsider, "create_claim", { p_post_id: racePost.id, p_proof: "Disposable race proof" })));
+    assert.equal(race.filter((result) => result.response.ok).length, 1);
+    denyRpc(race.find((result) => !result.response.ok), "23505");
+    const raceClaim = race.find((result) => result.response.ok).body;
+    const racedRows = requireResult(await service.from("claim_requests").select("id").eq("post_id", racePost.id), "Read race claims");
+    assert.deepEqual(racedRows, [{ id: raceClaim }]); checks++;
+    stage = "A6 concurrent cancels";
+    const cancels = await Promise.all([1, 2].map(() => rpc(outsider, "cancel_claim", { p_claim_id: raceClaim })));
+    assert.equal(cancels.filter((result) => result.response.ok).length, 1);
+    denyRpc(cancels.find((result) => !result.response.ok), "42501");
+    for (const status of ["accepted", "rejected", "cancelled", "completed"]) {
+      requireResult(await service.from("claim_requests").update({ status }).eq("id", raceClaim).select(), "Set processed fixture claim");
+      const before = await snapshot();
+      denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: raceClaim }), "42501");
+      denyRpc(await rpc(outsider, "create_claim", { p_post_id: racePost.id, p_proof: "Disposable duplicate proof" }), "23505");
+      assert.deepEqual(await snapshot(), before, "Processed claim changed"); checks++;
+    }
+    denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: randomUUID() }), "42501");
+    denyRpc(await rpc(outsider, "cancel_claim", { p_claim_id: "invalid" }), "22P02");
+    console.log("A6 PASS: proof vectors, create/cancel permissions, post states, duplicates and concurrent writes.");
     for (const actor of actors) {
       console.log(`Checking ${actor.name}: profile, REST and Storage permissions...`);
       stage = `${actor.name}: read and profile checks`;

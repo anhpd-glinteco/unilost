@@ -5,6 +5,12 @@
 - `e2e/`: Playwright flows với Supabase test project.
 - `fixtures/`: dữ liệu regression tối thiểu, không chứa thông tin cá nhân thật.
 
+## A6: tạo/hủy claim
+
+- `unit/claim-actions.test.ts`: xác thực, whitelist/validation, gọi RPC, lỗi và đối chiếu trạng thái khi kết quả chưa rõ; không trả/log proof.
+- `fixtures/claim-proofs.json`: 12 vector Unicode/độ dài/trim dùng chung unit và runner DB. `supabase/tests/a6_claims.sql`: quyền EXECUTE, khóa ghi trực tiếp, danh tính, tạo/hủy và chống lặp; fixture rollback.
+- Runner `npm run test:db` hiện cần migration 0004–0005, giữ A5 và kiểm tra RPC/quyền/trạng thái/cạnh tranh trên Supabase test. Thiết lập, cleanup failure injection và minh chứng: [hướng dẫn Supabase test](../docs/supabase-test.md).
+
 ## A2: quyền DB và sửa hồ sơ
 
 - Thiết lập project test, migration và lệnh chạy: [docs/supabase-test.md](../docs/supabase-test.md).
