@@ -37,7 +37,7 @@ Vai trò người gửi/chủ tin xét theo từng đối tượng. Quyền admi
 - Mọi thao tác trên một claim giữ nguyên claim khác. Sau accepted, các claim khác vẫn pending nhưng không được accepted tiếp vì tin đã verifying; người gửi vẫn có thể hủy và chủ tin vẫn có thể từ chối chúng.
 - Không mở chuyển trạng thái ngược từ accepted, gửi lại sau hủy/từ chối, hay tự đổi matched bằng matching. Quy tắc sửa/đóng tin ở B1 và hoàn trả ở C1 nằm ngoài A4.
 
-## Đối chiếu DB và phần còn thiếu
+## Đối chiếu DB tại A4 và phần còn thiếu khi đó
 
 | Nguồn hiện tại | Đã có trong mã migration | Còn phải triển khai / nghiệm thu |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ Vai trò người gửi/chủ tin xét theo từng đối tượng. Quyền admi
 | [0002](../../supabase/migrations/0002_a2_permissions.sql) | Thu hồi quyền ghi bảng và cột claim của public/anon/authenticated, gồm tài khoản admin ứng dụng | Policy INSERT/UPDATE cũ còn tồn tại nhưng không tự cấp lại quyền ghi; A6/A7 phải mở đúng đường ghi được bảo vệ |
 | [0003](../../supabase/migrations/0003_a3a_create_found_posts.sql) | Chỉ mở tạo tin found, không mở ghi claim | A6: tạo/hủy, validation tại DB và chống trùng; A7: quyết định nguyên tử, khóa tin, ràng buộc một accepted/completed và lịch sử |
 
-Unique theo người/tin chưa bảo đảm một accepted/completed trên toàn tin. Hiện chưa có ràng buộc đó hoặc quy trình quyết định nguyên tử. Validation TypeScript không bảo vệ được API DB trực tiếp. A4 không sửa migration, grants, dữ liệu hosted, action, RPC hoặc UI.
+Unique theo người/tin chưa bảo đảm một accepted/completed trên toàn tin. Tại A4 chưa có ràng buộc đó hoặc quy trình quyết định nguyên tử; migration 0006 của A7 bổ sung cả hai. Validation TypeScript không bảo vệ được API DB trực tiếp. A4 không sửa migration, grants, dữ liệu hosted, action, RPC hoặc UI.
 
 ## Tiêu chí nghiệm thu
 
@@ -54,7 +54,7 @@ Unique theo người/tin chưa bảo đảm một accepted/completed trên toàn
 - **A6:** chặn giả danh, tự claim, trùng, proof sai và tin không đủ điều kiện; tạo pending/hủy đúng quyền; hủy được pending khi tin đã ẩn/đóng/xóa; không gửi lại sau hủy/từ chối. Ghi trực tiếp không vượt quy trình.
 - **A7:** chỉ chủ tin quyết định; từ chối pending được khi tin đã ẩn/đóng/xóa; accepted kiểm tra lại đủ điều kiện; hai accept cạnh tranh chỉ một thành công; accept/hủy cạnh tranh không ghi đè trạng thái; lỗi giữa giao dịch rollback claim/tin/lịch sử; giữ nguyên claim khác và xử lý thao tác lặp an toàn.
 
-Các tiêu chí A5–A7 là đầu việc tương lai, không phải kết quả kiểm thử của A4. UI thật và E2E thuộc A8–A9; hoàn trả thuộc C1.
+Các tiêu chí A5–A7 là đặc tả của A4; kết quả thực chạy được ghi trong từng mục triển khai và checkpoint progress. UI thật và E2E thuộc A8–A9; hoàn trả thuộc C1.
 
 ## Triển khai A6 — tạo/hủy ở DB và server
 
@@ -74,3 +74,12 @@ Các tiêu chí A5–A7 là đầu việc tương lai, không phải kết quả
 - Chính sách SELECT hiện tại đạt ma trận này, không cần migration hay thay grants. Các kiểm tra chống ghi trực tiếp vẫn giữ; A6/A7 chưa triển khai.
 - Rà mã listing công khai: feed dùng mock posts; query chi tiết chỉ chọn trường tin, không lấy claim/proof; không có logging proof trong app. Trang dashboard claim vẫn là demo sau đăng nhập, chưa đọc claim thật. Đây chưa phải nghiệm thu UI riêng tư A8.
 - Đã thử lỗi transport ở lượt đọc A5 đầu tiên: runner đi qua `finally`, readback sáu bảng không còn fixture và cả bốn Auth user đã bị xóa. Không in response/proof/token; minh chứng và script tái chạy ở `D:\Codex\outputs\unilost\a5\`.
+
+## Triển khai A7 — quyết định của chủ tin
+
+- [Migration 0006](../../supabase/migrations/0006_a7_decide_claims.sql) thêm unique index theo post_id cho accepted/completed và hai RPC `accept_claim(p_claim_id uuid)` / `reject_claim(p_claim_id uuid)` trả UUID. Migration dừng nếu dữ liệu cũ có nhiều người nhận trên một tin; không tự sửa/xóa. Giữ nguyên migration đã áp dụng và quyền ghi trực tiếp.
+- RPC xác thực Auth/hồ sơ, SECURITY DEFINER với search_path rỗng; chỉ authenticated được EXECUTE. Cả hai khóa hàng tin trước khi UPDATE claim có điều kiện pending. Chỉ chủ tin quyết định; admin không được thay chủ tin.
+- Accept kiểm tra lại found/published/chưa xóa/searching hoặc matched/chưa có accepted hoặc completed; ghi accepted, tin verifying và đúng một status_history cùng giao dịch. Lịch sử lưu from/to, actor Auth và note null; lỗi ở bất cứ bước nào rollback toàn bộ. Reject chỉ đổi pending thành rejected và updated_at, kể cả tin ẩn/đóng/xóa mềm; không đổi tin/lịch sử/claim khác.
+- `acceptClaim`/`rejectClaim` dùng cùng ClaimState và chữ ký action A6, chỉ lấy claimId từ FormData. Khi kết quả RPC chưa chắc chắn, đọc `id,status,posts!inner(owner_id)` với claim ID và owner_id bằng Auth hiện tại, chỉ trả id/status cùng lỗi an toàn. Không lấy proof, không tự ghi lại, không biến readback thành một lần ghi thành công mới. Create/cancel vẫn đọc theo requester như A6.
+- [SQL suite A7](../../supabase/tests/a7_claim_decisions.sql) có fixture và trigger gây lỗi ghi lịch sử trong transaction tự rollback; trigger này không nằm trong migration hoặc RPC sản phẩm. Runner hosted kiểm tra quyền và accept/accept, accept/cancel, accept/reject bằng request song song, cùng dữ liệu cuối và lịch sử.
+- UI/caller runtime tiếp tục A8–A9; hoàn trả thuộc C1. Kết quả nghiệm thu A7 ghi tại checkpoint trong progress, không suy từ đặc tả thành production đã đạt.

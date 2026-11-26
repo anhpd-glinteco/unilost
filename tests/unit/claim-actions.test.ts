@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cancelClaim, createClaim } from "@/features/claims/actions";
+import { acceptClaim, rejectClaim, cancelClaim, createClaim } from "@/features/claims/actions";
 import { claimSchema } from "@/lib/validation";
 import vectors from "../fixtures/claim-proofs.json";
 
@@ -44,7 +44,7 @@ describe("claim actions", () => {
     expect(await cancelClaim(initial, form())).toEqual({ error: "", claimId, status: "cancelled" });
     expect(mocks.rpc).toHaveBeenCalledWith("cancel_claim", { p_claim_id: claimId });
   });
-  it.each([createClaim, cancelClaim])("requires account and profile", async (action) => {
+  it.each([createClaim, cancelClaim, acceptClaim, rejectClaim])("requires account and profile", async (action) => {
     for (const account of [{ user: null, profile: null }, { user: { id: userId }, profile: null }]) {
       mocks.account.mockResolvedValue(account);
       expect((await action(initial, form())).error).not.toBe("");
@@ -96,5 +96,42 @@ describe("claim actions", () => {
     if (failure === "read-error") mocks.maybeSingle.mockResolvedValue({ data: { id: claimId, status: "pending" }, error: { message: "secret" } });
     const result = await createClaim(initial, form());
     expect(result.claimId).toBeNull(); expect(result.error).not.toBe(""); expect(result.error).not.toContain("secret");
+  });
+});
+
+
+describe.each([
+  { action: acceptClaim, rpc: "accept_claim", status: "accepted" },
+  { action: rejectClaim, rpc: "reject_claim", status: "rejected" },
+])("owner decision $rpc", ({ action, rpc, status }) => {
+  it("sends only a validated claim ID", async () => {
+    expect(await action(initial, form({ owner_id: "victim", role: "admin", status: "completed" })))
+      .toEqual({ error: "", claimId, status });
+    expect(mocks.rpc).toHaveBeenCalledWith(rpc, { p_claim_id: claimId });
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+  it("rejects invalid and file IDs", async () => {
+    for (const value of ["bad", new File(["fake"], "id.txt")]) {
+      const data = form(); data.set("claimId", value);
+      expect((await action(initial, data)).claimId).toBeNull();
+    }
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it.each(["error", "transport", "wrong-id", "malformed"])("reads owner-scoped state after %s", async (failure) => {
+    if (failure === "transport") mocks.rpc.mockRejectedValue(new Error("secret"));
+    else mocks.rpc.mockResolvedValue({ data: failure === "wrong-id" ? postId : null, error: failure === "error" ? { message: "secret" } : null });
+    mocks.maybeSingle.mockResolvedValue({ data: { id: claimId, status: "cancelled", posts: { owner_id: userId }, proof: "private" }, error: null });
+    const result = await action(initial, form());
+    expect(result).toMatchObject({ claimId, status: "cancelled" });
+    expect(result.error).not.toBe("");
+    expect(JSON.stringify(result)).not.toMatch(/secret|private|owner_id/);
+    expect(mocks.select).toHaveBeenCalledWith("id,status,posts!inner(owner_id)");
+    expect(mocks.eq.mock.calls).toEqual([["posts.owner_id", userId], ["id", claimId]]);
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+  });
+  it.each([null, { id: claimId, status: "invalid" }])("keeps an unreadable result unconfirmed", async (data) => {
+    mocks.rpc.mockRejectedValue(new Error("secret"));
+    mocks.maybeSingle.mockResolvedValue({ data, error: null });
+    expect(await action(initial, form())).toMatchObject({ claimId: null, status: null });
   });
 });

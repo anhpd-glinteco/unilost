@@ -34,3 +34,9 @@
 4. Gán role admin cho tài khoản test bằng công cụ quản trị đáng tin cậy ngoài ứng dụng; không qua metadata hoặc request client. Giữ bảng ánh xạ ID test ở local, không commit email/token/proof thật.
 5. Kiểm tra khách/phiên thu hồi bị chặn bốn route; thành viên có dashboard, admin mới xem được `/admin`. Thử thiếu profile/lỗi đọc trên fixture hoặc DB test, không xóa profile đang có dữ liệu liên quan.
 6. A2 phải kiểm tra trực tiếp REST bằng token thành viên: không sửa được `profiles.role` và trường nhạy cảm. Migration 0001 còn rộng; migration 0002 đã áp dụng và kiểm chứng trên project test riêng, bổ sung quyền cột và khóa ghi demo. Không suy ra production có cùng trạng thái. Chỉ nghiệm thu sau migration và test API thật; guard A1b không thay quyền DB.
+
+## A7: quyết định claim
+
+- `unit/claim-actions.test.ts`: accept/reject chỉ gửi claimId đã kiểm tra; dùng phiên Auth, giữ ClaimState và readback đúng chủ tin khi lỗi/mất phản hồi. Giữ regression create/cancel A6.
+- [SQL A7](../supabase/tests/a7_claim_decisions.sql): điều kiện/quyền, index accepted/completed, trạng thái xử lý, lịch sử và rollback toàn hàng khi lỗi ghi lịch sử; toàn bộ fixture/DDL thử lỗi tự rollback.
+- Runner `npm run test:db` hiện yêu cầu migration 0006 sau 0001–0005. Bổ sung token actor, accept/accept khác claim, accept/cancel và accept/reject cùng claim; kiểm tra dữ liệu cuối, claim khác, lịch sử và cleanup/readback theo tin. Không thay thế UI E2E hoặc kiểm thử tải.
