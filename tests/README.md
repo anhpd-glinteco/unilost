@@ -47,3 +47,10 @@
 - `unit/claim-section.test.tsx` và `unit/post-detail-page.test.tsx`: đăng nhập quay lại đúng tin, form có nhãn, trạng thái hiện có, lỗi an toàn; giữ 404/lỗi trang chi tiết. Các kiểm tra action A6/A7 vẫn chạy nguyên vẹn.
 - Script browser ngoài Git: `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/work/unilost/a8a/browser.mjs`. Chỉ dùng project test đã xác nhận, tạo/dọn fixture riêng; không chứa credential. Chờ hydration trước khi nhập liệu; kiểm tra pending, trim/giữ input, double-click/DB readback, khóa sau reload, phiên hết hạn và hủy phản hồi POST sau commit. Không tự retry mutation.
 - Minh chứng: `D:/Codex/outputs/unilost/a8a/`, gồm summary, log và ảnh viewport 1086/390×844, DPR 1. Đây là browser dev với Supabase test, chưa phải production/HTTPS/Worker hoặc luồng A8b/A9.
+
+## A8b: danh sách claim riêng tư
+
+- `unit/claim-list-query.test.ts`: 31 test pagination input/lookahead/order, projection/filter đúng Auth cho member/admin, quan hệ tin null/xóa mềm, profile/query/transport/schema lỗi và chống trả nhầm chủ thể.
+- `unit/claim-list.test.tsx`: 15 test cả năm nhãn trạng thái, proof thu gọn/escape, ngày Việt Nam, link/tin không khả dụng, hai mục empty/error/loading, giữ trang còn lại khi phân trang/retry và guard login.
+- Browser tái chạy ngoài Git: `D:/Codex/work/unilost/a8b/browser.mjs`, chạy với env test ngoài repo theo docs/supabase-test.md. Script chỉ tạo tài khoản password/fixture giả, kiểm tra Supabase thật qua app và cleanup/readback; không nghiệm thu email PKCE.
+- Minh chứng A8b: `D:/Codex/outputs/unilost/a8b/`; xem progress để phân biệt dev/local Worker, review độc lập và production.

@@ -1,5 +1,30 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAccount } from "@/lib/auth/account";
-import Link from "next/link"; import { ArrowLeft, Check, Clock3, X } from "lucide-react"; import { SiteHeader } from "@/components/site-header";
-export const metadata = { title: "Yêu cầu nhận đồ" };
-export default async function ClaimsPage() { await requireAccount("/dashboard/claims"); return <div className="min-h-screen bg-[#f7f8f4]"><SiteHeader/><main className="mx-auto max-w-4xl px-5 py-10 md:px-10 md:py-14"><Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f746d]"><ArrowLeft size={16}/> Bảng tin của tôi</Link><h1 className="mt-8 font-serif text-5xl">Yêu cầu nhận đồ</h1><p className="mt-3 text-[#6f817a]">Dữ liệu demo — chưa có yêu cầu thật; các thao tác đang bị vô hiệu hóa.</p><div className="mt-8 space-y-4"><Claim title="Tai nghe Sony WH-1000XM4" name="Trần Quốc Bảo" status="Chờ bạn xác minh" tone="pending"/><Claim title="Ví da nâu · có thẻ sinh viên" name="Bạn đã gửi yêu cầu" status="Đang xác minh" tone="active"/></div></main></div>; }
-function Claim({ title, name, status, tone }: { title: string; name: string; status: string; tone: "pending" | "active" }) { return <article className="rounded-2xl border border-[#dfe9e2] bg-white p-5 md:p-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-center"><div><h2 className="font-serif text-2xl">{title}</h2><p className="mt-1 text-sm text-[#6f817a]">{name}</p></div><span className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${tone === "pending" ? "bg-[#fff0e4] text-[#b65e2b]" : "bg-[#e7f2ec] text-[#28725c]"}`}><Clock3 size={14}/>{status}</span></div>{tone === "pending" && <div className="mt-5 rounded-xl bg-[#f7f8f4] p-4 text-sm text-[#5f746d]">“Có một vết xước hình chữ L ở hộp sạc và mình nhớ đã để quên sau giờ học chiều thứ ba.”<div className="mt-4 flex gap-2"><button disabled className="inline-flex items-center gap-2 rounded-full bg-[#1c5546] px-4 py-2 text-sm font-bold text-white"><Check size={15}/> Chấp nhận</button><button disabled className="inline-flex items-center gap-2 rounded-full border border-[#dfe9e2] px-4 py-2 text-sm font-semibold"><X size={15}/> Từ chối</button></div></div>}</article>; }
+import { SiteHeader } from "@/components/site-header";
+import { ClaimList, claimsListHref } from "@/features/claims/claim-list";
+import { parseClaimsPage } from "@/features/claims/queries";
+
+export const metadata = { title: "Yêu cầu nhận đồ", robots: { index: false, follow: false } };
+export const dynamic = "force-dynamic";
+
+export default async function ClaimsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await searchParams;
+  const pages = { sentPage: parseClaimsPage(params.sentPage), receivedPage: parseClaimsPage(params.receivedPage) };
+  await requireAccount(claimsListHref(pages));
+  return <div className="min-h-screen bg-[#f7f8f4]">
+    <SiteHeader />
+    <main className="mx-auto max-w-4xl px-5 py-10 md:px-10 md:py-14">
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f746d]"><ArrowLeft size={16} /> Bảng tin của tôi</Link>
+      <h1 className="mt-8 font-serif text-4xl md:text-5xl">Yêu cầu nhận đồ</h1>
+      <p className="mt-3 text-[#6f817a]">Theo dõi yêu cầu bạn đã gửi và nhận trên tin của mình.</p>
+      {(["sent", "received"] as const).map(group => <section key={group} aria-labelledby={`${group}-heading`} className="mt-10">
+        <h2 id={`${group}-heading`} className="font-serif text-3xl">{group === "sent" ? "Đã gửi" : "Đã nhận"}</h2>
+        <Suspense key={`${group}-${pages.sentPage}-${pages.receivedPage}`} fallback={<p role="status" className="mt-4">Đang tải yêu cầu {group === "sent" ? "đã gửi" : "đã nhận"}…</p>}>
+          <ClaimList group={group} pages={pages} />
+        </Suspense>
+      </section>)}
+    </main>
+  </div>;
+}
