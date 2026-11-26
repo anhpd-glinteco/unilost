@@ -40,3 +40,10 @@
 - `unit/claim-actions.test.ts`: accept/reject chỉ gửi claimId đã kiểm tra; dùng phiên Auth, giữ ClaimState và readback đúng chủ tin khi lỗi/mất phản hồi. Giữ regression create/cancel A6.
 - [SQL A7](../supabase/tests/a7_claim_decisions.sql): điều kiện/quyền, index accepted/completed, trạng thái xử lý, lịch sử và rollback toàn hàng khi lỗi ghi lịch sử; toàn bộ fixture/DDL thử lỗi tự rollback.
 - Runner `npm run test:db` hiện yêu cầu migration 0006 sau 0001–0005. Bổ sung token actor, accept/accept khác claim, accept/cancel và accept/reject cùng claim; kiểm tra dữ liệu cuối, claim khác, lịch sử và cleanup/readback theo tin. Không thay thế UI E2E hoặc kiểm thử tải.
+
+## A8a: form gửi claim
+
+- `unit/claim-form-context.test.ts`: đúng phiên/filter/projection tối thiểu; khách, thiếu profile, chủ tin, tin không đủ điều kiện, năm trạng thái claim đã tồn tại và lỗi đọc đều được kiểm tra.
+- `unit/claim-section.test.tsx` và `unit/post-detail-page.test.tsx`: đăng nhập quay lại đúng tin, form có nhãn, trạng thái hiện có, lỗi an toàn; giữ 404/lỗi trang chi tiết. Các kiểm tra action A6/A7 vẫn chạy nguyên vẹn.
+- Script browser ngoài Git: `node --env-file=D:/Codex/work/unilost/a2/supabase-test.env D:/Codex/work/unilost/a8a/browser.mjs`. Chỉ dùng project test đã xác nhận, tạo/dọn fixture riêng; không chứa credential. Chờ hydration trước khi nhập liệu; kiểm tra pending, trim/giữ input, double-click/DB readback, khóa sau reload, phiên hết hạn và hủy phản hồi POST sau commit. Không tự retry mutation.
+- Minh chứng: `D:/Codex/outputs/unilost/a8a/`, gồm summary, log và ảnh viewport 1086/390×844, DPR 1. Đây là browser dev với Supabase test, chưa phải production/HTTPS/Worker hoặc luồng A8b/A9.

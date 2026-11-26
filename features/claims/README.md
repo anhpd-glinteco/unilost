@@ -83,3 +83,10 @@ Các tiêu chí A5–A7 là đặc tả của A4; kết quả thực chạy đư
 - `acceptClaim`/`rejectClaim` dùng cùng ClaimState và chữ ký action A6, chỉ lấy claimId từ FormData. Khi kết quả RPC chưa chắc chắn, đọc `id,status,posts!inner(owner_id)` với claim ID và owner_id bằng Auth hiện tại, chỉ trả id/status cùng lỗi an toàn. Không lấy proof, không tự ghi lại, không biến readback thành một lần ghi thành công mới. Create/cancel vẫn đọc theo requester như A6.
 - [SQL suite A7](../../supabase/tests/a7_claim_decisions.sql) có fixture và trigger gây lỗi ghi lịch sử trong transaction tự rollback; trigger này không nằm trong migration hoặc RPC sản phẩm. Runner hosted kiểm tra quyền và accept/accept, accept/cancel, accept/reject bằng request song song, cùng dữ liệu cuối và lịch sử.
 - UI/caller runtime tiếp tục A8–A9; hoàn trả thuộc C1. Kết quả nghiệm thu A7 ghi tại checkpoint trong progress, không suy từ đặc tả thành production đã đạt.
+
+## Triển khai A8a — form gửi yêu cầu
+
+- Trang chi tiết tin dùng `ClaimSection` và `readClaimFormContext` với Auth/RLS hiện tại. Query riêng chỉ đọc `id,status` của claim theo đúng tin/người gửi và các trường tin cần xét điều kiện; owner ID ở server, không đọc proof hoặc mở rộng projection công khai của `readPost`.
+- Khách có link đăng nhập quay lại đúng tin. Form chỉ mở cho hồ sơ hợp lệ, không phải chủ tin, found/published/chưa xóa/searching hoặc matched. Lỗi đọc khóa form và có link tải lại; mọi claim đã có đều khóa gửi lại, kể cả cancelled/rejected.
+- `CreateClaimForm` dùng `claimSchema`, `createClaim` và `ClaimState` hiện có. Validation giữ nội dung; pending khóa form và chặn hai action cùng lượt. Thành công chỉ khi action xác nhận; readback kèm lỗi không hiển thị thông báo gửi thành công. Mọi lần gửi tới server chưa rõ kết quả đều phải tải lại trước khi gửi tiếp.
+- Browser đã kiểm tra trên Supabase test bằng tài khoản password/fixture giả; không thay nghiệm thu email PKCE. Danh sách và nút hủy/chấp nhận/từ chối còn thuộc A8b/A9a; không đổi RPC/migration. Chi tiết kiểm chứng và giới hạn xem checkpoint A8a trong [progress](../../docs/progress.md).
