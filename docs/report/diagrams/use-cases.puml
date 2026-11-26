@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+title Hình 2.1 — Use case tổng quan UniLost (thiết kế mục tiêu, A0)
+
+actor "Khách" as Guest
+actor "Thành viên" as Member
+actor "Admin" as Admin
+Member --|> Guest
+Admin --|> Member
+
+rectangle "Hệ thống UniLost" {
+  usecase "UC01\nĐăng nhập / quản lý phiên" as Auth
+  usecase "UC02\nĐăng / sửa / đóng tin" as Posts
+  usecase "UC03\nTìm, xem tin và gợi ý" as Search
+  usecase "UC04\nGửi / xem claim đã gửi" as Send
+  usecase "UC05\nHủy claim pending" as Cancel
+  usecase "UC06\nXem / chấp nhận / từ chối\nclaim nhận vào" as Decide
+  usecase "UC07\nXác nhận hoàn trả" as Return
+  usecase "UC08\nXuất bản / ẩn / khôi phục\nvà đọc claim để kiểm duyệt" as Moderate
+}
+
+Guest -- Auth
+Guest -- Search
+Member -- Posts
+Member -- Send
+Member -- Cancel
+Member -- Decide
+Member -- Return
+Admin -- Moderate
+
+note bottom of Decide
+  Chỉ chủ tin quyết định claim nhận vào.
+  Admin không quyết định thay chủ tin.
+end note
+note bottom of Send
+  Người gửi khác chủ tin found.
+  Proof không xuất hiện công khai.
+end note
+legend bottom
+  Vai trò chủ tin / người yêu cầu phụ thuộc từng đối tượng.
+  Sơ đồ mô tả phạm vi đích, không khẳng định đã triển khai.
+  Hiện trạng thực tế: docs/baseline.md.
+endlegend
+@enduml
