@@ -1,5 +1,7 @@
 # Test plan
 
+- Nghiệm thu claim Tuần 6: [A9b — ma trận, replay và giới hạn](claim-acceptance.md). Kết quả từng lượt xem checkpoint A9b trong [progress](progress.md); không dùng kết quả local để kết luận production.
+
 - Unit: validation, query filter, matching score và chuyển trạng thái.
 - Component: form đăng tin, thẻ tin, bộ lọc và claim action; kiểm tra empty/error/success.
 - Integration/RLS: anonymous, owner, unrelated user và admin; proof của claim không bị lộ.
